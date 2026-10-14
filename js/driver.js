@@ -14,6 +14,7 @@ let simulationInterval = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    initDriverUserProfile();
     initDriverMap();
     setupEventListeners();
     fetchCurrentDriverStatus();
@@ -188,13 +189,84 @@ function handlePositionError(error) {
 }
 
 /**
- * Sends the latitude, longitude, and accuracy to the Spring Boot REST API.
+ * Initializes and dynamically displays the logged in driver's real name and vehicle registration plate.
+ */
+async function initDriverUserProfile() {
+    const nameEl = document.getElementById('driverNameDisplay');
+    const badgeEl = document.getElementById('driverVehicleBadge');
+
+    // 1. Try fetching current driver profile from Spring Boot Security session
+    try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.authenticated && data.name) {
+                if (nameEl) nameEl.textContent = data.name;
+                if (badgeEl && data.autoRegistrationNumber) {
+                    badgeEl.textContent = data.autoRegistrationNumber;
+                }
+                localStorage.setItem('autotrack_current_user', JSON.stringify(data));
+                return;
+            }
+        }
+    } catch (e) {
+        // Fallback to client-side localStorage
+    }
+
+    // 2. Fallback to localStorage session
+    try {
+        const stored = localStorage.getItem('autotrack_current_user');
+        if (stored) {
+            const user = JSON.parse(stored);
+            if (user && user.name && nameEl) {
+                nameEl.textContent = user.name;
+            }
+            if (user && user.autoRegistrationNumber && badgeEl) {
+                badgeEl.textContent = user.autoRegistrationNumber;
+            }
+        }
+    } catch (e) {
+        console.warn('Error reading stored driver profile:', e);
+    }
+}
+
+/**
+ * Sends the latitude, longitude, and accuracy to the Spring Boot REST API and syncs active status.
  */
 async function sendLocationToBackend(latitude, longitude, accuracy) {
     const lastUpdatedEl = document.getElementById('hudLastUpdated');
     if (lastUpdatedEl) {
         lastUpdatedEl.textContent = new Date().toLocaleTimeString();
     }
+
+    // Sync to strictly registered drivers in localStorage
+    try {
+        const storedUser = JSON.parse(localStorage.getItem('autotrack_current_user')) || {};
+        let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+        const reg = storedUser.autoRegistrationNumber || (document.getElementById('driverVehicleBadge') ? document.getElementById('driverVehicleBadge').textContent.trim() : 'KL-07-CD-4521');
+        const driverName = storedUser.name || (document.getElementById('driverNameDisplay') ? document.getElementById('driverNameDisplay').textContent.trim() : 'Driver');
+        
+        let found = drivers.find(d => d.autoRegistrationNumber === reg);
+        if (found) {
+            found.latitude = latitude;
+            found.longitude = longitude;
+            found.accuracy = accuracy;
+            found.lastUpdated = new Date().toLocaleTimeString();
+        } else {
+            drivers.push({
+                driverId: Date.now(),
+                driverName: driverName,
+                phone: storedUser.phone || '+91 98471 23456',
+                autoRegistrationNumber: reg,
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: accuracy,
+                available: true,
+                lastUpdated: new Date().toLocaleTimeString()
+            });
+        }
+        localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+    } catch(err) {}
 
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
                          window.location.hostname.includes('github.io') || 
@@ -227,7 +299,7 @@ async function sendLocationToBackend(latitude, longitude, accuracy) {
 }
 
 /**
- * Updates driver availability state in backend (Available / Busy).
+ * Updates driver availability state in backend and localStorage.
  */
 async function updateDriverAvailability(isAvailable) {
     const statusText = document.getElementById('availabilityStatusText');
@@ -236,12 +308,24 @@ async function updateDriverAvailability(isAvailable) {
         statusText.style.color = isAvailable ? 'var(--accent-emerald)' : 'var(--text-muted)';
     }
 
+    // Sync to registered drivers in localStorage
+    try {
+        const storedUser = JSON.parse(localStorage.getItem('autotrack_current_user')) || {};
+        let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+        const reg = storedUser.autoRegistrationNumber || (document.getElementById('driverVehicleBadge') ? document.getElementById('driverVehicleBadge').textContent.trim() : '');
+        let found = drivers.find(d => d.autoRegistrationNumber === reg);
+        if (found) {
+            found.available = isAvailable;
+            localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+        }
+    } catch(err) {}
+
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
                          window.location.hostname.includes('github.io') || 
                          window.location.port !== '8080';
 
     if (isStaticHost) {
-        showToast(isAvailable ? 'Driver status: Available for Rides (Demo Mode)' : 'Driver status: Busy / Off-Duty (Demo Mode)', isAvailable ? 'success' : 'info');
+        showToast(isAvailable ? 'Driver status: Available for Rides' : 'Driver status: Busy / Off-Duty', isAvailable ? 'success' : 'info');
         return;
     }
 
@@ -257,7 +341,7 @@ async function updateDriverAvailability(isAvailable) {
             showToast(`Status updated: ${isAvailable ? 'Available' : 'Busy'}`, isAvailable ? 'success' : 'info');
         }
     } catch (err) {
-        showToast(`Status updated: ${isAvailable ? 'Available' : 'Busy'} (Demo)`, isAvailable ? 'success' : 'info');
+        showToast(`Status updated: ${isAvailable ? 'Available' : 'Busy'}`, isAvailable ? 'success' : 'info');
     }
 }
 

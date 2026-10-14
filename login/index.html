@@ -72,17 +72,50 @@
     </main>
 
     <script>
-        function fillDemo(email, pass) {
+        function fillDemo(email, pass, demoName, demoRole, demoReg) {
             document.getElementById('email').value = email;
             document.getElementById('password').value = pass;
+            if (demoName) {
+                localStorage.setItem('autotrack_current_user', JSON.stringify({
+                    name: demoName,
+                    email: email,
+                    role: demoRole || 'PASSENGER',
+                    autoRegistrationNumber: demoReg || ''
+                }));
+            }
         }
 
         function handleStaticLogin(e) {
+            const emailInput = document.getElementById('email');
+            const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+            // Check if this user was registered in localStorage
+            let registeredUsers = [];
+            try {
+                registeredUsers = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
+            } catch(err) { registeredUsers = []; }
+
+            let matchedUser = registeredUsers.find(u => u.email.toLowerCase() === email);
+
+            if (!matchedUser) {
+                // Derive name from email prefix e.g. goutham@... -> Goutham
+                let namePart = email.split('@')[0] || 'User';
+                let formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                const isDriver = email.includes('driver') || email.includes('rajesh') || email.includes('suresh');
+                matchedUser = {
+                    name: formattedName,
+                    email: email,
+                    role: isDriver ? 'DRIVER' : 'PASSENGER',
+                    autoRegistrationNumber: isDriver ? 'KL-07-CD-4521' : ''
+                };
+            }
+
+            localStorage.setItem('autotrack_current_user', JSON.stringify(matchedUser));
+
             // When hosted on Vercel without Spring Boot backend running
-            const email = document.getElementById('email').value.toLowerCase();
             if (window.location.hostname.includes('vercel.app') || window.location.port !== '8080') {
                 e.preventDefault();
-                if (email.includes('driver') || email.includes('rajesh') || email.includes('suresh') || email.includes('ali')) {
+                if (matchedUser.role === 'DRIVER') {
                     window.location.href = '/driver-dashboard.html';
                 } else {
                     window.location.href = '/passenger-dashboard.html';

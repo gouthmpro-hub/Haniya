@@ -20,50 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Default fallback drivers for static Vercel hosting or when backend is starting.
+ * Fleet storage default for strictly registered drivers.
  */
 function getDefaultDemoDrivers() {
-    return [
-        {
-            id: 1,
-            name: 'Rajesh Kumar',
-            email: 'rajesh@autotrack.com',
-            phone: '+91 98471 23456',
-            autoRegistrationNumber: 'KL-07-CD-4521',
-            available: true,
-            latitude: 9.9825,
-            longitude: 76.2820,
-            accuracy: 9.5,
-            lastUpdated: 'Live GPS Active',
-            activeGps: true
-        },
-        {
-            id: 2,
-            name: 'Suresh Menon',
-            email: 'suresh@autotrack.com',
-            phone: '+91 98472 34567',
-            autoRegistrationNumber: 'KL-07-AB-8910',
-            available: true,
-            latitude: 9.9790,
-            longitude: 76.2855,
-            accuracy: 11.0,
-            lastUpdated: 'Live GPS Active',
-            activeGps: true
-        },
-        {
-            id: 3,
-            name: 'Mohammed Ali',
-            email: 'ali@autotrack.com',
-            phone: '+91 98473 45678',
-            autoRegistrationNumber: 'KL-07-EF-6324',
-            available: false,
-            latitude: 9.9910,
-            longitude: 76.2950,
-            accuracy: 15.0,
-            lastUpdated: '10 mins ago',
-            activeGps: false
-        }
-    ];
+    return [];
 }
 
 /**
@@ -93,17 +53,17 @@ async function loadFleetData() {
         }
     }
 
-    // Static mode for Vercel
+    // Static mode for Vercel: strictly use registered drivers
     const stored = localStorage.getItem('autotrack_drivers');
     if (stored) {
         try {
             allDrivers = JSON.parse(stored);
         } catch (e) {
-            allDrivers = getDefaultDemoDrivers();
+            allDrivers = [];
         }
     } else {
-        allDrivers = getDefaultDemoDrivers();
-        localStorage.setItem('autotrack_drivers', JSON.stringify(allDrivers));
+        allDrivers = [];
+        localStorage.setItem('autotrack_drivers', JSON.stringify([]));
     }
 
     const total = allDrivers.length;

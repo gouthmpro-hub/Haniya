@@ -124,9 +124,64 @@
         }
 
         function handleStaticRegister(e) {
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const autoRegInput = document.getElementById('autoRegistrationNumber');
+
+            const name = nameInput ? nameInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+            const autoReg = autoRegInput ? autoRegInput.value.trim().toUpperCase() : '';
+
+            const profile = {
+                name: name || (currentRole === 'DRIVER' ? 'Driver' : 'Passenger'),
+                email: email,
+                role: currentRole,
+                phone: phone,
+                autoRegistrationNumber: autoReg,
+                available: true
+            };
+
+            // Save active session user
+            localStorage.setItem('autotrack_current_user', JSON.stringify(profile));
+
+            // Save to registered users list
+            try {
+                let list = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
+                list = list.filter(u => u.email !== email);
+                list.push(profile);
+                localStorage.setItem('autotrack_registered_users', JSON.stringify(list));
+            } catch(err) {
+                localStorage.setItem('autotrack_registered_users', JSON.stringify([profile]));
+            }
+
+            // If driver, strictly add to local registered driver fleet
+            if (currentRole === 'DRIVER' && autoReg) {
+                try {
+                    let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+                    drivers = drivers.filter(d => d.autoRegistrationNumber !== autoReg);
+                    drivers.push({
+                        driverId: Date.now(),
+                        driverName: profile.name,
+                        email: email,
+                        phone: phone,
+                        autoRegistrationNumber: autoReg,
+                        latitude: 9.9825 + (Math.random() * 0.006 - 0.003),
+                        longitude: 76.2820 + (Math.random() * 0.006 - 0.003),
+                        accuracy: 9.0,
+                        available: true,
+                        lastUpdated: new Date().toLocaleTimeString()
+                    });
+                    localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+                } catch(err) {
+                    console.warn(err);
+                }
+            }
+
             if (window.location.hostname.includes('vercel.app') || window.location.port !== '8080') {
                 e.preventDefault();
-                alert('Account registered successfully! Redirecting...');
+                alert('Account registered successfully for ' + profile.name + '! Redirecting to dashboard...');
                 if (currentRole === 'DRIVER') {
                     window.location.href = '/driver-dashboard.html';
                 } else {

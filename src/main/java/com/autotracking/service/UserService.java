@@ -12,6 +12,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.autotracking.model.DriverLocation;
+import com.autotracking.repository.DriverLocationRepository;
+import com.autotracking.repository.DriverRepository;
+import com.autotracking.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +32,16 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final DriverRepository driverRepository;
+    private final DriverLocationRepository locationRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository,
                        DriverRepository driverRepository,
+                       DriverLocationRepository locationRepository,
                        @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.driverRepository = driverRepository;
+        this.locationRepository = locationRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -80,9 +93,13 @@ public class UserService implements UserDetailsService {
                     savedUser,
                     request.getPhone().trim(),
                     regNumber,
-                    false // initially unavailable until driver explicitly enables it
+                    true // Set available so driver is immediately ready upon signup
             );
-            driverRepository.save(driver);
+            Driver savedDriver = driverRepository.save(driver);
+
+            // Seed initial location around Kochi so driver is immediately discoverable
+            DriverLocation initialLoc = new DriverLocation(savedDriver, 9.9825, 76.2820, 10.0);
+            locationRepository.save(initialLoc);
         }
 
         return savedUser;

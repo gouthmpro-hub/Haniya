@@ -46,7 +46,7 @@
                 Registration successful! Please log in below.
             </div>
 
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/login}" method="post" onsubmit="handleLoginSubmit(event)">
                 <div class="form-group">
                     <label class="form-label" for="email">Email Address</label>
                     <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
@@ -87,9 +87,41 @@
     </main>
 
     <script>
-        function fillDemo(email, pass) {
+        function fillDemo(email, pass, demoName, demoRole, demoReg) {
             document.getElementById('email').value = email;
             document.getElementById('password').value = pass;
+            if (demoName) {
+                localStorage.setItem('autotrack_current_user', JSON.stringify({
+                    name: demoName,
+                    email: email,
+                    role: demoRole || 'PASSENGER',
+                    autoRegistrationNumber: demoReg || ''
+                }));
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            const emailInput = document.getElementById('email');
+            const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+            let registeredUsers = [];
+            try {
+                registeredUsers = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
+            } catch(err) { registeredUsers = []; }
+
+            let matchedUser = registeredUsers.find(u => u.email.toLowerCase() === email);
+
+            if (!matchedUser) {
+                let namePart = email.split('@')[0] || 'User';
+                let formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                matchedUser = {
+                    name: formattedName,
+                    email: email,
+                    role: 'PASSENGER'
+                };
+            }
+
+            localStorage.setItem('autotrack_current_user', JSON.stringify(matchedUser));
         }
     </script>
 </body>

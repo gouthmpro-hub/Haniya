@@ -91,6 +91,9 @@ public class DriverLocationService {
         LocalDateTime freshnessCutoff = LocalDateTime.now().minusSeconds(staleTimeoutSeconds);
 
         List<DriverLocation> activeFreshLocations = locationRepository.findActiveFreshLocations(freshnessCutoff);
+        if (activeFreshLocations == null || activeFreshLocations.isEmpty()) {
+            activeFreshLocations = locationRepository.findAllActiveLocations();
+        }
 
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm:ss a");

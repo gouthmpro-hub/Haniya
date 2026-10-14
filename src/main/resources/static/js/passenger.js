@@ -17,6 +17,7 @@ let stompClient = null;
 let pollTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    initPassengerUserProfile();
     initPassengerMap();
     setupPassengerControls();
     requestPassengerGPS();
@@ -218,11 +219,49 @@ function setPassengerLocation(lat, lng, panMap = true) {
     fetchNearbyAutos();
 }
 
-let staticSimStep = 0;
+/**
+ * Initializes and dynamically displays the logged in passenger's real name.
+ */
+async function initPassengerUserProfile() {
+    const nameEl = document.getElementById('passengerNameDisplay');
+    if (!nameEl) return;
+
+    // 1. Try fetching current user profile from Spring Boot Security session
+    try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.authenticated && data.name) {
+                nameEl.textContent = data.name;
+                localStorage.setItem('autotrack_current_user', JSON.stringify(data));
+                return;
+            }
+        }
+    } catch (e) {
+        // Fallback to client-side localStorage
+    }
+
+    // 2. Fallback to localStorage session
+    try {
+        const stored = localStorage.getItem('autotrack_current_user');
+        if (stored) {
+            const user = JSON.parse(stored);
+            if (user && user.name) {
+                nameEl.textContent = user.name;
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn('Error reading stored user:', e);
+    }
+
+    nameEl.textContent = 'Passenger';
+}
 
 /**
- * Fetches nearby available auto-rickshaws from the Spring Boot REST API.
- * On static hosting (e.g. Vercel), smoothly simulates live auto movement.
+ * Fetches nearby available auto-rickshaws.
+ * STRICT POLICY: Only signed-up drivers who are marked available are allowed on the map.
+ * Zero mock or synthetic drivers are allowed.
  */
 async function fetchNearbyAutos() {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
@@ -239,52 +278,40 @@ async function fetchNearbyAutos() {
                 return;
             }
         } catch (err) {
-            // Fall through to client-side fallback
+            // Fall through to client-side registered driver fleet
         }
     }
 
-    // Static fallback for Vercel / offline presentation mode
-    staticSimStep++;
-    const drift1Lat = 0.0035 + (0.0003 * Math.sin(staticSimStep * 0.4));
-    const drift1Lng = 0.0042 + (0.0003 * Math.cos(staticSimStep * 0.4));
-    const lat1 = currentPassengerLat + drift1Lat;
-    const lon1 = currentPassengerLng + drift1Lng;
-    const d1 = calculateHaversineKm(currentPassengerLat, currentPassengerLng, lat1, lon1);
+    // Strictly query registered drivers from localStorage (NO fake mock drivers)
+    let registeredDrivers = [];
+    try {
+        registeredDrivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+    } catch(err) {
+        registeredDrivers = [];
+    }
 
-    const drift2Lat = -0.0048 + (0.00025 * Math.cos(staticSimStep * 0.3));
-    const drift2Lng = 0.0031 + (0.00025 * Math.sin(staticSimStep * 0.3));
-    const lat2 = currentPassengerLat + drift2Lat;
-    const lon2 = currentPassengerLng + drift2Lng;
-    const d2 = calculateHaversineKm(currentPassengerLat, currentPassengerLng, lat2, lon2);
+    // Filter strictly: must be available and within search radius
+    const activeAutos = registeredDrivers
+        .filter(driver => driver && driver.available === true && driver.latitude && driver.longitude)
+        .map(driver => {
+            const dist = calculateHaversineKm(currentPassengerLat, currentPassengerLng, driver.latitude, driver.longitude);
+            return {
+                driverId: driver.driverId || 1,
+                driverName: driver.driverName,
+                phone: driver.phone || 'N/A',
+                autoRegistrationNumber: driver.autoRegistrationNumber,
+                latitude: driver.latitude,
+                longitude: driver.longitude,
+                accuracy: driver.accuracy || 10.0,
+                available: true,
+                distanceKm: Number(dist.toFixed(2)),
+                etaMinutes: Math.max(1, Math.round((dist / 25) * 60))
+            };
+        })
+        .filter(a => a.distanceKm <= currentRadiusKm)
+        .sort((a, b) => a.distanceKm - b.distanceKm);
 
-    const fallbackAutos = [
-        {
-            driverId: 1,
-            driverName: 'Rajesh Kumar',
-            phone: '+91 98471 23456',
-            autoRegistrationNumber: 'KL-07-CD-4521',
-            latitude: lat1,
-            longitude: lon1,
-            accuracy: 9.5,
-            available: true,
-            distanceKm: Number(d1.toFixed(2)),
-            etaMinutes: Math.max(1, Math.round((d1 / 25) * 60))
-        },
-        {
-            driverId: 2,
-            driverName: 'Suresh Menon',
-            phone: '+91 98472 34567',
-            autoRegistrationNumber: 'KL-07-AB-8910',
-            latitude: lat2,
-            longitude: lon2,
-            accuracy: 11.0,
-            available: true,
-            distanceKm: Number(d2.toFixed(2)),
-            etaMinutes: Math.max(1, Math.round((d2 / 25) * 60))
-        }
-    ].filter(a => a.distanceKm <= currentRadiusKm);
-
-    renderNearbyAutos(fallbackAutos);
+    renderNearbyAutos(activeAutos);
 }
 
 /**
@@ -315,8 +342,8 @@ function renderNearbyAutos(autos) {
         listContainer.innerHTML = `
             <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-dim);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛺</div>
-                <h4 style="color: var(--text-muted); margin-bottom: 0.4rem;">No Autos Nearby</h4>
-                <p style="font-size: 0.85rem;">Try expanding your search radius using the slider above, or check back in a moment.</p>
+                <h4 style="color: var(--text-muted); margin-bottom: 0.4rem;">No Registered Drivers Active Nearby</h4>
+                <p style="font-size: 0.85rem; line-height: 1.5;">Strict policy: Only registered drivers who signed up and turned on GPS tracking in the Driver Portal appear on this map.</p>
             </div>
         `;
         return;

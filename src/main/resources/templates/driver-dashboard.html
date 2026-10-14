@@ -22,8 +22,8 @@
 
             <div style="display:flex; align-items:center; gap:1.2rem;">
                 <div style="font-size:0.9rem;">
-                    Driver: <strong th:text="${user != null ? user.name : 'Driver'}" style="color:var(--text-main);">Rajesh Kumar</strong>
-                    <span class="auto-badge" th:text="${driver != null ? driver.autoRegistrationNumber : 'KL-07-XX-0000'}">KL-07-CD-4521</span>
+                    Driver: <strong id="driverNameDisplay" th:text="${user != null ? user.name : 'Driver'}" style="color:var(--text-main);">Driver</strong>
+                    <span class="auto-badge" id="driverVehicleBadge" th:text="${driver != null ? driver.autoRegistrationNumber : 'Auto Rickshaw'}">Auto Rickshaw</span>
                 </div>
                 <form th:action="@{/logout}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Logout</button>

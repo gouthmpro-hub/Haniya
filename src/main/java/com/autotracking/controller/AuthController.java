@@ -1,26 +1,31 @@
 package com.autotracking.controller;
 
 import com.autotracking.dto.RegisterRequest;
+import com.autotracking.model.Role;
 import com.autotracking.model.User;
+import com.autotracking.service.DriverService;
 import com.autotracking.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Controller
 public class AuthController {
 
     private final UserService userService;
+    private final DriverService driverService;
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, DriverService driverService) {
         this.userService = userService;
+        this.driverService = driverService;
     }
 
     /**
@@ -74,5 +79,39 @@ public class AuthController {
                     "error", "Registration error: " + ex.getMessage()
             ));
         }
+    }
+
+    /**
+     * REST API endpoint to retrieve the currently logged in user's profile and name.
+     */
+    @GetMapping("/api/auth/me")
+    @ResponseBody
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || 
+            authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+            return ResponseEntity.status(401).body(Map.of("authenticated", false));
+        }
+
+        User user = userService.findByEmail(authentication.getName());
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("authenticated", false));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("authenticated", true);
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("role", user.getRole().name());
+
+        if (user.getRole() == Role.DRIVER) {
+            driverService.findDriverByEmail(user.getEmail()).ifPresent(driver -> {
+                response.put("driverId", driver.getId());
+                response.put("autoRegistrationNumber", driver.getAutoRegistrationNumber());
+                response.put("phone", driver.getPhone());
+                response.put("available", driver.isAvailable());
+            });
+        }
+
+        return ResponseEntity.ok(response);
     }
 }
