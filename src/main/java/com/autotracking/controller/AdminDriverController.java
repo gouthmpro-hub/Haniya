@@ -65,4 +65,25 @@ public class AdminDriverController {
     public ResponseEntity<DriverManagementDTO> toggleAvailability(@PathVariable Long id) {
         return ResponseEntity.ok(driverService.toggleDriverAvailability(id));
     }
+
+    /**
+     * Manually registers a new driver into the system with their name and vehicle details.
+     */
+    @PostMapping
+    public ResponseEntity<?> addDriver(@jakarta.validation.Valid @RequestBody com.autotracking.dto.ManualDriverRequest request) {
+        try {
+            DriverManagementDTO createdDriver = driverService.addManualDriver(request);
+            return ResponseEntity.ok(createdDriver);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Failed to add driver: " + e.getMessage()
+            ));
+        }
+    }
 }

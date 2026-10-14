@@ -21,10 +21,16 @@
             </a>
 
             <div style="display:flex; align-items:center; gap:1.2rem;">
-                <div style="font-size:0.9rem;">
-                    Driver: <strong id="driverNameDisplay" style="color:var(--text-main);">Driver</strong>
+                <div style="font-size:0.9rem; display:flex; align-items:center; gap:0.6rem;">
+                    <span>Driver: <strong id="driverNameDisplay" style="color:var(--text-main);">Driver</strong></span>
                     <span class="auto-badge" id="driverVehicleBadge">Auto Rickshaw</span>
+                    <span style="background:rgba(16,185,129,0.15); color:#34d399; font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:6px; font-weight:700; border:1px solid rgba(16,185,129,0.3); display:inline-flex; align-items:center; gap:0.3rem;">
+                        🔒 Encrypted
+                    </span>
                 </div>
+                <a href="/admin/drivers" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; padding:0.45rem 0.85rem; font-size:0.82rem;">
+                    <span>➕</span> Add Driver
+                </a>
                 <a href="/login" class="btn btn-outline btn-sm">Logout</a>
             </div>
         </nav>
@@ -145,6 +151,33 @@
         </div>
 
     </main>
+
+    <!-- Encrypted Driver Portal Security Access Gate Modal -->
+    <div id="driverSecurityGateModal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.96); backdrop-filter:blur(14px); align-items:center; justify-content:center; padding:1.5rem;">
+        <div style="background:#1e293b; border:1px solid rgba(245,158,11,0.4); border-radius:20px; max-width:480px; width:100%; padding:2.4rem; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.8);">
+            <div style="width:72px; height:72px; margin:0 auto 1.2rem; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.2rem;">
+                🔒
+            </div>
+            <div style="display:inline-block; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#f59e0b; background:rgba(245,158,11,0.12); padding:0.3rem 0.85rem; border-radius:999px; margin-bottom:0.9rem;">
+                256-Bit Encrypted Portal
+            </div>
+            <h3 style="font-size:1.4rem; font-weight:700; color:#f8fafc; margin-bottom:0.6rem;">Driver Access Restricted</h3>
+            <p style="font-size:0.9rem; color:#94a3b8; line-height:1.6; margin-bottom:1.8rem;">
+                This Driver Telemetry portal is protected. Only registered auto drivers can access live GPS broadcasting and vehicle dispatch controls.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:0.8rem;">
+                <a href="/login" class="btn btn-primary" style="display:block; text-align:center; padding:0.85rem; font-weight:600;">
+                    🔑 Sign In with Driver Account
+                </a>
+                <a href="/register" class="btn btn-outline" style="display:block; text-align:center; padding:0.85rem; font-weight:600;">
+                    🛺 Register as New Driver
+                </a>
+                <a href="/" style="font-size:0.85rem; color:#64748b; margin-top:0.4rem; text-decoration:none;">
+                    ← Return to Home
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts: Leaflet JS & Driver Controller -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

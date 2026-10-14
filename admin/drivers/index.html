@@ -111,9 +111,14 @@
                     </span>
                 </div>
 
-                <!-- Search Input -->
-                <div style="width:320px; max-width:100%;">
-                    <input type="text" id="driverSearchInput" class="form-control" placeholder="Search by name, auto no, phone..." style="padding:0.6rem 1rem; font-size:0.88rem;">
+                <!-- Action Controls: Search & Manually Add Driver -->
+                <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                    <div style="width:280px; max-width:100%;">
+                        <input type="text" id="driverSearchInput" class="form-control" placeholder="Search by name, auto no, phone..." style="padding:0.6rem 1rem; font-size:0.88rem;">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openAddDriverModal()" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; padding:0.6rem 1.1rem; white-space:nowrap;">
+                        <span>➕</span> Manually Add Driver
+                    </button>
                 </div>
             </div>
 
@@ -144,6 +149,67 @@
     <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border-glass); color: var(--text-dim); font-size: 0.88rem; margin-top: auto;">
         GPS-Based Auto Tracking System &bull; Fleet Administration Console &bull; BTech S3 Mini Project
     </footer>
+
+    <!-- Modal: Manually Add Driver -->
+    <div id="modalAddDriver" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:1.5rem;">
+        <div class="glass-card" style="max-width:540px; width:100%; padding:2.2rem; position:relative; max-height:90vh; overflow-y:auto; border:1px solid rgba(245,158,11,0.3); box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.6rem;">🛺</span>
+                    <h3 style="font-size:1.3rem; margin:0;">Manually Add Driver</h3>
+                </div>
+                <button type="button" onclick="closeAddDriverModal()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+
+            <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1.4rem;">
+                Register a verified auto driver. The driver will be immediately added to the live fleet roster and visible on the Passenger radar.
+            </p>
+
+            <form id="formManualAddDriver" onsubmit="submitManualDriver(event)">
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="manualDriverName">Driver Full Name *</label>
+                    <input type="text" id="manualDriverName" class="form-control" placeholder="e.g. Arun Kumar" required minlength="2">
+                </div>
+
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="manualDriverEmail">Email Address *</label>
+                    <input type="email" id="manualDriverEmail" class="form-control" placeholder="e.g. arun@autotrack.com" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.1rem;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="manualDriverPhone">Phone Number *</label>
+                        <input type="tel" id="manualDriverPhone" class="form-control" placeholder="e.g. +91 98471 23456" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" for="manualDriverVehicle">Auto Reg. Plate *</label>
+                        <input type="text" id="manualDriverVehicle" class="form-control" placeholder="e.g. KL-07-CD-1234" style="text-transform:uppercase;" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="manualDriverPassword">Access Password / PIN</label>
+                    <input type="password" id="manualDriverPassword" class="form-control" placeholder="Default: password123">
+                    <small style="color:var(--text-dim); font-size:0.75rem;">Password will be encrypted with BCrypt.</small>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1.6rem; padding:0.8rem 1rem; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:10px;">
+                    <input type="checkbox" id="manualDriverAvailable" checked style="width:18px; height:18px; accent-color:var(--accent-emerald); cursor:pointer;">
+                    <label for="manualDriverAvailable" style="font-size:0.9rem; color:var(--accent-emerald); font-weight:600; cursor:pointer; margin:0;">
+                        Mark Available for Rides Immediately
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:0.8rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeAddDriverModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitAddDriver" style="font-weight:600; padding:0.75rem 1.5rem;">
+                        Save & Add Driver
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="/js/admin.js"></script>

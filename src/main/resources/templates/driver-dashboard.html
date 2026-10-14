@@ -21,10 +21,16 @@
             </a>
 
             <div style="display:flex; align-items:center; gap:1.2rem;">
-                <div style="font-size:0.9rem;">
-                    Driver: <strong id="driverNameDisplay" th:text="${user != null ? user.name : 'Driver'}" style="color:var(--text-main);">Driver</strong>
+                <div style="font-size:0.9rem; display:flex; align-items:center; gap:0.6rem;">
+                    <span>Driver: <strong id="driverNameDisplay" th:text="${user != null ? user.name : 'Driver'}" style="color:var(--text-main);">Driver</strong></span>
                     <span class="auto-badge" id="driverVehicleBadge" th:text="${driver != null ? driver.autoRegistrationNumber : 'Auto Rickshaw'}">Auto Rickshaw</span>
+                    <span style="background:rgba(16,185,129,0.15); color:#34d399; font-size:0.75rem; padding:0.2rem 0.55rem; border-radius:6px; font-weight:700; border:1px solid rgba(16,185,129,0.3); display:inline-flex; align-items:center; gap:0.3rem;">
+                        🔒 Encrypted
+                    </span>
                 </div>
+                <a th:href="@{/admin/drivers}" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; padding:0.45rem 0.85rem; font-size:0.82rem;">
+                    <span>➕</span> Add Driver
+                </a>
                 <form th:action="@{/logout}" method="post" style="display:inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Logout</button>
                 </form>

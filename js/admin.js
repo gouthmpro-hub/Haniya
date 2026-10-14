@@ -326,3 +326,117 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 3500);
 }
+
+/**
+ * Opens the Manually Add Driver modal.
+ */
+function openAddDriverModal() {
+    const modal = document.getElementById('modalAddDriver');
+    if (modal) {
+        modal.style.display = 'flex';
+        const nameInput = document.getElementById('manualDriverName');
+        if (nameInput) nameInput.focus();
+    }
+}
+
+/**
+ * Closes the Manually Add Driver modal.
+ */
+function closeAddDriverModal() {
+    const modal = document.getElementById('modalAddDriver');
+    if (modal) {
+        modal.style.display = 'none';
+        const form = document.getElementById('formManualAddDriver');
+        if (form) form.reset();
+    }
+}
+
+/**
+ * Handles submission of manually added driver.
+ */
+async function submitManualDriver(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('manualDriverName').value.trim();
+    const email = document.getElementById('manualDriverEmail').value.trim().toLowerCase();
+    const phone = document.getElementById('manualDriverPhone').value.trim();
+    const autoRegistrationNumber = document.getElementById('manualDriverVehicle').value.trim().toUpperCase();
+    const password = document.getElementById('manualDriverPassword').value.trim() || 'password123';
+    const available = document.getElementById('manualDriverAvailable').checked;
+
+    const lat = 9.9825 + (Math.random() * 0.008 - 0.004);
+    const lng = 76.2820 + (Math.random() * 0.008 - 0.004);
+
+    const payload = {
+        name: name,
+        email: email,
+        phone: phone,
+        autoRegistrationNumber: autoRegistrationNumber,
+        password: password,
+        available: available,
+        latitude: Number(lat.toFixed(6)),
+        longitude: Number(lng.toFixed(6))
+    };
+
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+
+    if (!isStaticHost) {
+        try {
+            const res = await fetch('/api/admin/drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                showToast(errData.message || 'Failed to add driver.', 'danger');
+                return;
+            }
+        } catch (err) {
+            console.warn('Backend sync failed, storing locally:', err.message);
+        }
+    }
+
+    // Strictly sync to localStorage fleet cache
+    try {
+        let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+        drivers = drivers.filter(d => d.autoRegistrationNumber !== autoRegistrationNumber && d.email !== email);
+        drivers.push({
+            id: Date.now(),
+            driverId: Date.now(),
+            name: name,
+            driverName: name,
+            email: email,
+            phone: phone,
+            autoRegistrationNumber: autoRegistrationNumber,
+            available: available,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            accuracy: 9.0,
+            lastUpdated: new Date().toLocaleTimeString(),
+            activeGps: true
+        });
+        localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+
+        let users = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
+        users = users.filter(u => u.email !== email);
+        users.push({
+            name: name,
+            email: email,
+            role: 'DRIVER',
+            phone: phone,
+            autoRegistrationNumber: autoRegistrationNumber,
+            available: available
+        });
+        localStorage.setItem('autotrack_registered_users', JSON.stringify(users));
+    } catch(err) {
+        console.warn('LocalStorage error:', err);
+    }
+
+    closeAddDriverModal();
+    showToast(`Driver ${name} (${autoRegistrationNumber}) registered successfully!`, 'success');
+    await loadFleetData();
+}

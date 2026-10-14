@@ -58,7 +58,6 @@ public class SecurityConfig {
                     "/api/admin/**",
                     "/admin-dashboard.html",
                     "/passenger-dashboard.html",
-                    "/driver-dashboard.html",
                     "/api/auth/**",
                     "/css/**",
                     "/js/**",
@@ -68,7 +67,7 @@ public class SecurityConfig {
                 ).permitAll()
                 // Role-specific protected routes
                 .requestMatchers("/passenger/**", "/api/passenger/**").hasRole("PASSENGER")
-                .requestMatchers("/driver/**", "/api/driver/**").hasRole("DRIVER")
+                .requestMatchers("/driver/**", "/api/driver/**", "/driver-dashboard.html").hasRole("DRIVER")
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

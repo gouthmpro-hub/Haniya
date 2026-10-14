@@ -27,15 +27,18 @@ public class DriverService {
     private final DriverLocationRepository locationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     public DriverService(DriverRepository driverRepository,
                          DriverLocationRepository locationRepository,
                          UserRepository userRepository,
-                         SimpMessagingTemplate messagingTemplate) {
+                         SimpMessagingTemplate messagingTemplate,
+                         @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
         this.driverRepository = driverRepository;
         this.locationRepository = locationRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Driver getDriverByUserEmail(String email) {
@@ -208,6 +211,80 @@ public class DriverService {
                 location != null ? location.getAccuracy() : 0.0,
                 formattedTime,
                 locationSharingActive
+        );
+    }
+
+    /**
+     * Manually adds a driver with their name, contact, vehicle number, and encrypted password.
+     */
+    @Transactional
+    public DriverManagementDTO addManualDriver(com.autotracking.dto.ManualDriverRequest request) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new IllegalArgumentException("User with email " + normalizedEmail + " already exists.");
+        }
+
+        String regNumber = request.getAutoRegistrationNumber().trim().toUpperCase();
+        if (driverRepository.existsByAutoRegistrationNumber(regNumber)) {
+            throw new IllegalArgumentException("Auto registration number " + regNumber + " is already registered.");
+        }
+
+        String rawPassword = (request.getPassword() != null && !request.getPassword().trim().isEmpty())
+                ? request.getPassword().trim()
+                : "password123";
+
+        // 1. Create User with encrypted BCrypt password
+        User user = new User(
+                request.getName().trim(),
+                normalizedEmail,
+                passwordEncoder.encode(rawPassword),
+                com.autotracking.model.Role.DRIVER
+        );
+        User savedUser = userRepository.save(user);
+
+        // 2. Create Driver entity
+        boolean isAvailable = request.getAvailable() != null ? request.getAvailable() : true;
+        Driver driver = new Driver(
+                savedUser,
+                request.getPhone().trim(),
+                regNumber,
+                isAvailable
+        );
+        Driver savedDriver = driverRepository.save(driver);
+
+        // 3. Create initial DriverLocation
+        double lat = request.getLatitude() != null ? request.getLatitude() : 9.9825;
+        double lng = request.getLongitude() != null ? request.getLongitude() : 76.2820;
+        DriverLocation location = new DriverLocation(savedDriver, lat, lng, 10.0);
+        location.setLastUpdated(LocalDateTime.now());
+        locationRepository.save(location);
+
+        // 4. Broadcast to passengers via WebSocket
+        DriverLocationBroadcastDTO broadcast = new DriverLocationBroadcastDTO(
+                savedDriver.getId(),
+                savedDriver.getUser().getName(),
+                savedDriver.getAutoRegistrationNumber(),
+                lat,
+                lng,
+                10.0,
+                savedDriver.isAvailable(),
+                "DRIVER_ADDED"
+        );
+        messagingTemplate.convertAndSend("/topic/driver-updates", broadcast);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
+        return new DriverManagementDTO(
+                savedDriver.getId(),
+                savedDriver.getUser().getName(),
+                savedDriver.getUser().getEmail(),
+                savedDriver.getPhone(),
+                savedDriver.getAutoRegistrationNumber(),
+                savedDriver.isAvailable(),
+                lat,
+                lng,
+                10.0,
+                location.getLastUpdated().format(formatter),
+                true
         );
     }
 }

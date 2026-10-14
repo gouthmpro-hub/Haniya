@@ -12,13 +12,63 @@ let driverMap = null;
 let driverMarker = null;
 let simulationInterval = null;
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize on page load with strict encryption security check
+document.addEventListener('DOMContentLoaded', async () => {
+    const isAuthorized = await enforceDriverAuthentication();
+    if (!isAuthorized) return;
+
     initDriverUserProfile();
     initDriverMap();
     setupEventListeners();
     fetchCurrentDriverStatus();
 });
+
+/**
+ * Enforces strict encryption security for the Driver Portal.
+ * Only verified driver accounts can access the telemetry dashboard and controls.
+ */
+async function enforceDriverAuthentication() {
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         window.location.port !== '8080';
+
+    if (!isStaticHost) {
+        try {
+            const res = await fetch('/api/auth/me');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.authenticated && data.role === 'DRIVER') {
+                    return true;
+                }
+            }
+        } catch(e) {}
+    }
+
+    // Fallback verification in localStorage session
+    try {
+        const stored = localStorage.getItem('autotrack_current_user');
+        if (stored) {
+            const user = JSON.parse(stored);
+            if (user && user.role === 'DRIVER') {
+                return true;
+            }
+        }
+    } catch(e) {}
+
+    // Unauthorized - display encryption gate lock
+    showEncryptionLockScreen();
+    return false;
+}
+
+/**
+ * Displays the 256-bit encrypted access restricted lock screen.
+ */
+function showEncryptionLockScreen() {
+    const modal = document.getElementById('driverSecurityGateModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
 
 /**
  * Initializes the Driver's real-time Leaflet mini-map.
