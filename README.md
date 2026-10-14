@@ -1,6 +1,6 @@
 # GPS-Based Auto Tracking System — Java Web Application
 > **BTech S3 Computer Science & Engineering Mini Project**  
-> Built with **Java 17**, **Spring Boot 3**, **Spring Security**, **Spring Data JPA**, **MySQL / H2**, **Leaflet.js / OpenStreetMap**, and **HTML5 / CSS3 / JavaScript**.
+> Built with **Java 17**, **Spring Boot 3**, **Spring Security**, **Spring Data JPA**, **MySQL / H2**, **Google Maps**, and **HTML5 / CSS3 / JavaScript**.
 
 ---
 
@@ -9,10 +9,11 @@
 The **GPS-Based Auto Tracking System** is a responsive, web-based platform designed to connect urban passengers with nearby available auto-rickshaws in real time. Unlike native Android applications that require APK installation and mobile app store distribution, this solution functions entirely within any standard mobile or desktop web browser using the W3C **Browser Geolocation API** (`navigator.geolocation`).
 
 ### Key Capabilities
-- **Passenger Portal**: Real-time pickup geolocation, configurable discovery radius (1–15 km), interactive OpenStreetMap visualization, closest-driver sorting, straight-line distance, and estimated arrival time (ETA).
+- **Passenger Portal**: Real-time pickup geolocation, configurable discovery radius (1–15 km), interactive Google Maps visualization (Streets, Satellite, and Terrain layers), closest-driver sorting, straight-line distance, and estimated arrival time (ETA).
 - **Driver Portal**: Foreground browser GPS tracking using `watchPosition()`, one-click availability toggle (Available vs. Busy/Off-Duty), live telemetry HUD (Latitude, Longitude, Accuracy, Speed), and simulated driving demonstration mode for indoor evaluations.
+- **Fleet & Driver Management**: Real-time driver roster, dynamic count statistics (Total, Available, Busy), status toggling, and instant driver removal from the database and radar.
 - **Real-Time Push Architecture**: Spring Boot WebSocket with STOMP message broker (`/topic/driver-updates`) with fail-safe 5-second polling fallback.
-- **Zero-Cost Mapping**: Powered by **Leaflet.js** and **OpenStreetMap** — 100% free with zero API keys, no Google Cloud billing setup, and no credit card required.
+- **Google Maps Integration**: High-resolution Google Maps imagery with multi-layer switching (Streets, Satellite, Terrain) and zero API limits.
 
 ---
 
@@ -21,7 +22,7 @@ The **GPS-Based Auto Tracking System** is a responsive, web-based platform desig
 | Layer | Technology | Details / Rationale |
 |---|---|---|
 | **Frontend UI** | HTML5, CSS3, Vanilla JavaScript | Custom dark obsidian & electric amber design system, responsive glassmorphic cards |
-| **Mapping Engine** | Leaflet.js (v1.9.4) & OpenStreetMap | Zero cost, open-source tiles, custom SVG auto-rickshaw markers |
+| **Mapping Engine** | Google Maps (Streets, Satellite, Terrain) | Crisp Google Maps satellite and road layers, custom SVG auto-rickshaw markers |
 | **Backend Framework** | Java 17, Spring Boot 3.2.5 | Enterprise-grade MVC, REST APIs, and STOMP WebSocket |
 | **Security & Auth** | Spring Security 6, BCrypt | Session-based authentication, role-based authorization (`ROLE_PASSENGER`, `ROLE_DRIVER`) |
 | **Database** | MySQL 8.x (Production) & H2 (Zero-Setup Fallback) | Relational schema with foreign keys, unique constraints, and coordinate indexes |

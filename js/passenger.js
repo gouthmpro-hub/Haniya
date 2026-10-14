@@ -30,13 +30,38 @@ document.addEventListener('DOMContentLoaded', () => {
 function initPassengerMap() {
     passengerMap = L.map('map', {
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
     }).setView([currentPassengerLat, currentPassengerLng], 14);
 
-    // OpenStreetMap Tile Layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    }).addTo(passengerMap);
+    // Google Maps Tile Layers
+    const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Map data &copy; <a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>'
+    });
+
+    const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Imagery &copy; <a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>'
+    });
+
+    const googleTerrain = L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Map data &copy; <a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>'
+    });
+
+    // Default to Google Streets
+    googleStreets.addTo(passengerMap);
+
+    // Google Maps Layer Control Switcher
+    const baseMaps = {
+        "🗺️ Google Streets": googleStreets,
+        "🛰️ Google Satellite": googleSatellite,
+        "⛰️ Google Terrain": googleTerrain
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(passengerMap);
 
     // Passenger Marker (Blue pulsing radar dot)
     const passengerIcon = L.divIcon({

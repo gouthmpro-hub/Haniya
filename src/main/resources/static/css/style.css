@@ -714,12 +714,46 @@ input:checked + .slider:before {
   color: var(--text-main);
 }
 
-/* Leaflet Map Dark Tile Filter */
-.leaflet-layer,
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out,
-.leaflet-control-attribution {
-  filter: brightness(0.88) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.85);
+/* Map Controls & Google Maps Styling */
+.leaflet-control-zoom {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid var(--border-glass) !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--text-main) !important;
+  border-bottom: 1px solid var(--border-glass) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--accent-amber) !important;
+  color: #111827 !important;
+}
+
+.leaflet-control-layers {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--text-main) !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  padding: 8px 12px !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.85rem !important;
+}
+
+.leaflet-control-layers-expanded {
+  backdrop-filter: blur(8px);
+}
+
+.leaflet-control-layers label {
+  cursor: pointer;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .leaflet-popup-content-wrapper {
@@ -781,4 +815,5 @@ input:checked + .slider:before {
   from { opacity: 0; transform: translateY(-20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
 

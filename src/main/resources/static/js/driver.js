@@ -29,13 +29,31 @@ function initDriverMap() {
     // Default center (Kochi Marine Drive: 9.9825, 76.2820)
     driverMap = L.map('driverMap', {
         zoomControl: true,
-        attributionControl: false
+        attributionControl: true
     }).setView([9.9825, 76.2820], 15);
 
-    // Dark OpenStreetMap Tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    }).addTo(driverMap);
+    // Google Maps Tile Layers
+    const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Map data &copy; <a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>'
+    });
+
+    const googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Imagery &copy; <a href="https://maps.google.com" target="_blank" rel="noopener">Google Maps</a>'
+    });
+
+    // Default to Google Streets
+    googleStreets.addTo(driverMap);
+
+    // Google Maps Layer Switcher
+    const baseMaps = {
+        "🗺️ Streets": googleStreets,
+        "🛰️ Satellite": googleSatellite
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(driverMap);
 
     // Custom Auto Rickshaw Marker Icon
     const autoIcon = L.divIcon({
