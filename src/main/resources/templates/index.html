@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS-Based Auto Tracking System | College Mini Project</title>
+    <meta name="description" content="Find nearby available auto-rickshaws using real-time browser GPS tracking with Leaflet and Spring Boot.">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="navbar">
+            <a th:href="@{/}" class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                </div>
+                <div class="brand-text">Auto<span>Track</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a th:href="@{/}" class="nav-link active">Home</a></li>
+                <li th:if="${!authenticated}"><a th:href="@{/login}" class="nav-link">Sign In</a></li>
+                <li th:if="${!authenticated}"><a th:href="@{/register}" class="btn btn-primary btn-sm">Get Started</a></li>
+                <li th:if="${authenticated}"><a th:href="@{/passenger/dashboard}" class="nav-link">Passenger Portal</a></li>
+                <li th:if="${authenticated}"><a th:href="@{/driver/dashboard}" class="nav-link">Driver Portal</a></li>
+                <li th:if="${authenticated}">
+                    <form th:action="@{/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <main>
+        <section class="hero">
+            <div class="hero-grid">
+                <div>
+                    <div class="hero-badge">
+                        <span>●</span> BTech S3 Mini Project &bull; GPS Auto Tracking
+                    </div>
+                    <h1 class="hero-title">
+                        Locate Nearby <span>Auto Rickshaws</span> in Real Time
+                    </h1>
+                    <p class="hero-lead">
+                        A modern, web-based GPS dispatch platform connecting passengers with nearby available auto-rickshaws using device Geolocation API, Spring Boot, MySQL, and OpenStreetMap.
+                    </p>
+                    <div class="hero-cta-group">
+                        <a th:href="@{/register}" class="btn btn-primary" id="btnHeroPassenger">
+                            <span>Passenger Portal</span> &rarr;
+                        </a>
+                        <a th:href="@{/register}" class="btn btn-outline" id="btnHeroDriver">
+                            <span>Driver Portal</span> &rarr;
+                        </a>
+                        <a th:href="@{/login}" class="btn btn-outline" id="btnHeroDemo">
+                            <span>Quick Demo Login</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Interactive Preview Graphic -->
+                <div>
+                    <div class="glass-card" style="padding: 2.5rem; border: 1px solid rgba(245, 158, 11, 0.25); position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <div style="font-weight: 700; font-family: var(--font-display); font-size: 1.1rem; color: var(--accent-amber);">
+                                🛺 Live Dispatch Telemetry
+                            </div>
+                            <span class="pulse-dot"></span>
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.75); border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid var(--border-glass);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">ACTIVE DRIVER NEARBY</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">Rajesh Kumar &bull; <span style="color:var(--accent-amber);">KL-07-CD-4521</span></div>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.6rem; font-size: 0.85rem;">
+                                <span>📍 <strong>0.85 km away</strong></span>
+                                <span>⏱️ <strong>~2 min ETA</strong></span>
+                                <span style="color:var(--accent-emerald);">● Available</span>
+                            </div>
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.75); border-radius: 12px; padding: 1.2rem; border: 1px solid var(--border-glass);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem;">ACTIVE DRIVER NEARBY</div>
+                            <div style="font-weight: 700; font-size: 1.1rem;">Suresh Menon &bull; <span style="color:var(--accent-amber);">KL-07-AB-8910</span></div>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.6rem; font-size: 0.85rem;">
+                                <span>📍 <strong>1.42 km away</strong></span>
+                                <span>⏱️ <strong>~4 min ETA</strong></span>
+                                <span style="color:var(--accent-emerald);">● Available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Overview -->
+        <section class="features-section">
+            <div class="section-header">
+                <h2>Engineered for Modern Web Browsers</h2>
+                <p style="color: var(--text-muted);">Built purely using web standards without requiring any Android APK installation.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">📍</div>
+                    <h3 style="margin-bottom: 0.6rem;">Browser Geolocation API</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Utilizes the smartphone's built-in hardware GPS via <code>watchPosition()</code> for high-precision live coordinate tracking.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">⚡</div>
+                    <h3 style="margin-bottom: 0.6rem;">Real-Time Updates</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Spring Boot WebSocket with STOMP protocol pushes coordinate broadcasts instantly to connected passenger maps.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">📐</div>
+                    <h3 style="margin-bottom: 0.6rem;">Haversine Formula</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Mathematical great-circle distance algorithm accurately calculates proximity and sorts autos by closest distance.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">🗺️</div>
+                    <h3 style="margin-bottom: 0.6rem;">100% Free Open Maps</h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Interactive Leaflet.js with OpenStreetMap tiles. No Google Cloud billing, no credit card, and zero API limits.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 2.5rem; border-top: 1px solid var(--border-glass); color: var(--text-dim); font-size: 0.9rem;">
+        GPS-Based Auto Tracking System &bull; BTech S3 Mini Project &bull; Built with Spring Boot & Leaflet
+    </footer>
+
+</body>
+</html>

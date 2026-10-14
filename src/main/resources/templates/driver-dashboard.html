@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard | GPS Auto Tracking</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body style="min-height:100vh; display:flex; flex-direction:column;">
+
+    <!-- Top Navigation Bar -->
+    <header>
+        <nav class="navbar" style="padding: 0.8rem 2rem;">
+            <a th:href="@{/}" class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                </div>
+                <div class="brand-text">Driver<span>Portal</span></div>
+            </a>
+
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+                <div style="font-size:0.9rem;">
+                    Driver: <strong th:text="${user != null ? user.name : 'Driver'}" style="color:var(--text-main);">Rajesh Kumar</strong>
+                    <span class="auto-badge" th:text="${driver != null ? driver.autoRegistrationNumber : 'KL-07-XX-0000'}">KL-07-CD-4521</span>
+                </div>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+                </form>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main style="flex:1; max-width:1200px; width:100%; margin:0 auto; padding:2rem 1.5rem;">
+        
+        <!-- Foreground Browser Notice Alert -->
+        <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:1rem 1.4rem; margin-bottom:1.8rem; display:flex; align-items:center; gap:1rem; font-size:0.9rem; color:var(--accent-amber-light);">
+            <div style="font-size:1.6rem;">📱</div>
+            <div>
+                <strong>Keep this browser tab open:</strong> Smartphone browsers restrict background GPS when tabs are minimized or when the phone screen is locked. Keep this page in foreground while driving.
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:2rem; align-items:start;">
+            
+            <!-- Left Column: Controls & Telemetry HUD -->
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                
+                <!-- GPS & Availability Control Card -->
+                <div class="glass-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.4rem;">
+                        <h3 style="font-size:1.25rem;">Dispatch Controls</h3>
+                        <div id="trackingStatusPill" style="font-size:0.8rem; font-weight:600; display:flex; align-items:center; gap:0.4rem; color:var(--text-muted);">
+                            <span class="pulse-dot danger"></span> Tracking Inactive
+                        </div>
+                    </div>
+
+                    <!-- Start/Stop Location Sharing Button -->
+                    <div style="margin-bottom:1.5rem;">
+                        <button id="btnToggleTracking" class="btn btn-primary btn-block" style="padding:1rem; font-size:1.05rem;">
+                            Start Location Sharing
+                        </button>
+                        <small style="display:block; text-align:center; color:var(--text-dim); margin-top:0.5rem; font-size:0.8rem;">
+                            Uses browser <code>navigator.geolocation.watchPosition()</code>
+                        </small>
+                    </div>
+
+                    <!-- Availability Switch Toggle -->
+                    <div class="switch-wrapper">
+                        <div>
+                            <div style="font-weight:600; font-size:1rem;" id="availabilityStatusText">
+                                Available for Rides
+                            </div>
+                            <small style="color:var(--text-muted); font-size:0.8rem;">
+                                Controls whether you appear on passenger search
+                            </small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="chkAvailability" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Viva & Demo Simulation Mode -->
+                    <div style="margin-top:1.5rem; padding-top:1.2rem; border-top:1px solid var(--border-glass);">
+                        <button id="btnSimulateDrive" class="btn btn-outline btn-block btn-sm" style="color:var(--accent-amber); border-color:rgba(245,158,11,0.3);">
+                            🚗 Simulate Live Drive (Class Demo Mode)
+                        </button>
+                        <small style="display:block; text-align:center; color:var(--text-dim); margin-top:0.4rem; font-size:0.78rem;">
+                            Simulates auto moving across city streets without walking outside!
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Telemetry HUD Grid -->
+                <div class="glass-card">
+                    <h3 style="font-size:1.15rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span>📡</span> Real-Time GPS Telemetry
+                    </h3>
+
+                    <div class="telemetry-grid">
+                        <div class="telemetry-card">
+                            <div class="telemetry-label">Latitude</div>
+                            <div class="telemetry-val" id="hudLatitude">9.982500</div>
+                        </div>
+
+                        <div class="telemetry-card">
+                            <div class="telemetry-label">Longitude</div>
+                            <div class="telemetry-val" id="hudLongitude">76.282000</div>
+                        </div>
+
+                        <div class="telemetry-card">
+                            <div class="telemetry-label">GPS Accuracy</div>
+                            <div class="telemetry-val" id="hudAccuracy">±10 m</div>
+                        </div>
+
+                        <div class="telemetry-card">
+                            <div class="telemetry-label">Speed</div>
+                            <div class="telemetry-val" id="hudSpeed">0.0 km/h</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:1rem; font-size:0.82rem; color:var(--text-muted); display:flex; justify-content:space-between;">
+                        <span>Last Server Sync:</span>
+                        <strong id="hudLastUpdated" style="color:var(--accent-emerald);">Waiting for first fix...</strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Driver Real-Time Mini Map -->
+            <div class="glass-card" style="padding:1.4rem; display:flex; flex-direction:column; height:580px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span>🗺️</span> Vehicle Location on Map
+                    </h3>
+                    <span style="font-size:0.8rem; color:var(--text-muted);">
+                        Vehicle: <strong th:text="${driver != null ? driver.autoRegistrationNumber : 'Auto'}">Auto</strong>
+                    </span>
+                </div>
+
+                <div id="driverMap" style="flex:1; width:100%; border-radius:12px; overflow:hidden; border:1px solid var(--border-glass);"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Scripts: Leaflet JS & Driver Controller -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script th:src="@{/js/driver.js}"></script>
+
+</body>
+</html>
