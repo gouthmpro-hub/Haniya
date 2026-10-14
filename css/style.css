@@ -755,3 +755,31 @@ input:checked + .slider:before {
     border-bottom: 1px solid var(--border-glass);
   }
 }
+
+/* Portal Selection Modal & Role Cards */
+.portal-roles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .portal-roles-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+}
+
+.portal-role-card:hover {
+  border-color: var(--accent-amber) !important;
+  transform: translateY(-5px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6);
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(-20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+

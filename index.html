@@ -21,9 +21,8 @@
             <ul class="nav-links">
                 <li><a href="/" class="nav-link active">Home</a></li>
                 <li><a href="/login" class="nav-link">Sign In</a></li>
-                <li><a href="/register" class="btn btn-primary btn-sm">Get Started</a></li>
-                <li><a href="/passenger/dashboard" class="nav-link">Passenger Portal</a></li>
-                <li><a href="/driver/dashboard" class="nav-link">Driver Portal</a></li>
+                <li><a href="/register" class="nav-link">Register</a></li>
+                <li><button type="button" onclick="openPortalModal()" class="btn btn-primary btn-sm">Portal ▾</button></li>
             </ul>
         </nav>
     </header>
@@ -41,14 +40,11 @@
                 <p class="hero-lead" style="max-width: 680px; margin-bottom: 2.5rem;">
                     A modern, web-based GPS dispatch platform connecting passengers with nearby available auto-rickshaws using device Geolocation API, Spring Boot, MySQL, and OpenStreetMap.
                 </p>
-                <div class="hero-cta-group" style="justify-content: center;">
-                    <a href="/passenger/dashboard" class="btn btn-primary" id="btnHeroPassenger">
-                        <span>Passenger Portal</span> &rarr;
-                    </a>
-                    <a href="/driver/dashboard" class="btn btn-outline" id="btnHeroDriver">
-                        <span>Driver Portal</span> &rarr;
-                    </a>
-                    <a href="/login" class="btn btn-outline" id="btnHeroDemo">
+                <div class="hero-cta-group" style="justify-content: center; gap: 1.2rem;">
+                    <button type="button" onclick="openPortalModal()" class="btn btn-primary" id="btnOpenPortal" style="padding: 1rem 2.4rem; font-size: 1.15rem; box-shadow: 0 6px 24px rgba(245, 158, 11, 0.45);">
+                        <span>Enter Portal</span> &rarr;
+                    </button>
+                    <a href="/login" class="btn btn-outline" id="btnHeroDemo" style="padding: 1rem 2rem; font-size: 1.05rem;">
                         <span>Quick Demo Login</span>
                     </a>
                 </div>
@@ -94,10 +90,71 @@
         </section>
     </main>
 
+    <!-- Portal Selection Modal (Opens when 'Enter Portal' is clicked) -->
+    <div id="portalModal" class="portal-modal-backdrop" onclick="closePortalModal(event)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; padding:1.5rem;">
+        <div class="glass-card" style="max-width:680px; width:100%; position:relative; padding:2.5rem; border:1px solid rgba(245,158,11,0.35); animation:modalSlide 0.25s ease;" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button type="button" onclick="closePortalModal()" style="position:absolute; top:1.2rem; right:1.2rem; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1; transition:var(--transition);">&times;</button>
+
+            <div style="text-align:center; margin-bottom:2.2rem;">
+                <div class="hero-badge" style="margin-bottom:0.8rem;">Select User Role</div>
+                <h2 style="font-size:2.2rem; margin-bottom:0.5rem;">Access AutoTrack Portal</h2>
+                <p style="color:var(--text-muted); font-size:0.95rem;">Choose whether you want to find nearby auto-rickshaws or share your driver location.</p>
+            </div>
+
+            <!-- Two Role Cards Grid -->
+            <div class="portal-roles-grid">
+                <!-- Passenger Card -->
+                <a href="/passenger/dashboard" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
+                    <div style="width:68px; height:68px; border-radius:50%; background:rgba(59,130,246,0.15); display:flex; align-items:center; justify-content:center; font-size:2.2rem; border:1px solid rgba(59,130,246,0.3);">
+                        🚶
+                    </div>
+                    <h3 style="font-size:1.35rem; color:var(--text-main);">Passenger Portal</h3>
+                    <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.4;">
+                        Find nearby auto-rickshaws, check distance & ETA, and view live radar map.
+                    </p>
+                    <span class="btn btn-primary btn-sm btn-block" style="margin-top:auto; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; box-shadow:0 4px 14px rgba(59,130,246,0.35);">
+                        Enter as Passenger &rarr;
+                    </span>
+                </a>
+
+                <!-- Driver Card -->
+                <a href="/driver/dashboard" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
+                    <div style="width:68px; height:68px; border-radius:50%; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; font-size:2.2rem; border:1px solid rgba(245,158,11,0.3);">
+                        🛺
+                    </div>
+                    <h3 style="font-size:1.35rem; color:var(--text-main);">Auto Driver Portal</h3>
+                    <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.4;">
+                        Share live GPS location, toggle availability, and receive nearby passenger rides.
+                    </p>
+                    <span class="btn btn-primary btn-sm btn-block" style="margin-top:auto;">
+                        Enter as Driver &rarr;
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer style="text-align: center; padding: 2.5rem; border-top: 1px solid var(--border-glass); color: var(--text-dim); font-size: 0.9rem;">
         GPS-Based Auto Tracking System &bull; BTech S3 Mini Project &bull; Built with Spring Boot & Leaflet
     </footer>
+
+    <script>
+        function openPortalModal() {
+            const modal = document.getElementById('portalModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closePortalModal(e) {
+            const modal = document.getElementById('portalModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePortalModal();
+        });
+    </script>
 
 </body>
 </html>
