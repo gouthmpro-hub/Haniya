@@ -1,11 +1,13 @@
 {
-  "version": 2,
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/passenger/dashboard", "destination": "/passenger/dashboard/index.html" },
+    { "source": "/passenger/dashboard/", "destination": "/passenger/dashboard/index.html" },
+    { "source": "/passenger-dashboard", "destination": "/passenger-dashboard.html" },
+    { "source": "/driver/dashboard", "destination": "/driver/dashboard/index.html" },
+    { "source": "/driver/dashboard/", "destination": "/driver/dashboard/index.html" },
+    { "source": "/driver-dashboard", "destination": "/driver-dashboard.html" },
     { "source": "/login", "destination": "/login.html" },
-    { "source": "/register", "destination": "/register.html" },
-    { "source": "/passenger/dashboard", "destination": "/passenger-dashboard.html" },
-    { "source": "/driver/dashboard", "destination": "/driver-dashboard.html" },
-    { "source": "/(.*)", "destination": "/$1" }
+    { "source": "/register", "destination": "/register.html" }
   ]
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In | GPS Auto Tracking</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body style="display:flex; flex-direction:column; min-height:100vh;">
 
@@ -83,9 +83,9 @@
             if (window.location.hostname.includes('vercel.app') || window.location.port !== '8080') {
                 e.preventDefault();
                 if (email.includes('driver') || email.includes('rajesh') || email.includes('suresh') || email.includes('ali')) {
-                    window.location.href = '/driver/dashboard';
+                    window.location.href = '/driver-dashboard.html';
                 } else {
-                    window.location.href = '/passenger/dashboard';
+                    window.location.href = '/passenger-dashboard.html';
                 }
             }
         }

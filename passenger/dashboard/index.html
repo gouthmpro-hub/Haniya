@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger Dashboard | GPS Auto Tracking</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="height:100vh; overflow:hidden;">
+
+    <!-- Top Navigation Bar -->
+    <header>
+        <nav class="navbar" style="padding: 0.8rem 2rem;">
+            <a href="/" class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                </div>
+                <div class="brand-text">Passenger<span>Dispatch</span></div>
+            </a>
+
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+                <div style="font-size:0.9rem;">
+                    Hello, <strong style="color:var(--text-main);">Rahul Sharma</strong>
+                    <span style="background:rgba(59,130,246,0.15); color:#60a5fa; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:6px; margin-left:6px; font-weight:600;">PASSENGER</span>
+                </div>
+                <a href="/login" class="btn btn-outline btn-sm">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Dashboard Split Screen -->
+    <div class="dashboard-layout">
+        
+        <!-- Left Sidebar: Controls & Nearby List -->
+        <aside class="dashboard-sidebar">
+            
+            <!-- Location & Radar Panel -->
+            <div class="glass-card" style="padding: 1.4rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span>📍</span> Pickup Location
+                    </h3>
+                    <button id="btnLocateMe" class="btn btn-primary btn-sm" title="Get real browser GPS coordinates">
+                        📡 My GPS
+                    </button>
+                </div>
+
+                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-glass); border-radius:10px; padding:0.8rem 1rem; margin-bottom:1.2rem; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:var(--text-muted);">Pickup Pin:</span>
+                    <strong id="pickupCoordinates" style="color:var(--accent-amber);">9.9825°, 76.2820°</strong>
+                </div>
+
+                <!-- Radius Slider -->
+                <div style="margin-bottom: 1.2rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.4rem;">
+                        <span style="color:var(--text-muted); font-weight:500;">Search Radius:</span>
+                        <strong id="radiusValue" style="color:var(--accent-amber);">5.0 km</strong>
+                    </div>
+                    <input type="range" id="radiusSlider" min="1" max="15" step="0.5" value="5.0" style="width:100%; accent-color:var(--accent-amber); cursor:pointer;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-dim); margin-top:2px;">
+                        <span>1 km</span>
+                        <span>5 km</span>
+                        <span>10 km</span>
+                        <span>15 km</span>
+                    </div>
+                </div>
+
+                <!-- Destination Search -->
+                <div>
+                    <label class="form-label" for="destinationInput" style="font-size:0.82rem;">Destination (Optional)</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="destinationInput" class="form-control" placeholder="Search landmark or station..." style="padding:0.6rem 0.9rem; font-size:0.88rem;">
+                        <button id="btnSearchDest" class="btn btn-outline btn-sm" style="padding:0.6rem 0.9rem;">
+                            Go
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nearby Auto Rickshaws Section -->
+            <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                    <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
+                        <span>🛺</span> Available Autos
+                    </h3>
+                    <span id="nearbyCountBadge" class="auto-badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); border-color:rgba(16,185,129,0.3);">
+                        Scanning...
+                    </span>
+                </div>
+
+                <!-- Scrollable List of Autos -->
+                <div id="nearbyAutosList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:0.75rem; padding-right:4px;">
+                    <!-- Dynamically populated via passenger.js -->
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Right Side: Interactive Leaflet Map -->
+        <main class="dashboard-map-container">
+            <div id="map"></div>
+
+            <!-- Floating Live Status Overlay -->
+            <div class="map-floating-overlay">
+                <span class="pulse-dot"></span>
+                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
+                    Live GPS Telemetry Active
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts: Leaflet, SockJS, STOMP, Passenger Controller -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/passenger.js"></script>
+
+</body>
+</html>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPS-Based Auto Tracking System | College Mini Project</title>
     <meta name="description" content="Find nearby available auto-rickshaws using real-time browser GPS tracking with Leaflet and Spring Boot.">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
@@ -20,8 +20,8 @@
             </a>
             <ul class="nav-links">
                 <li><a href="/" class="nav-link active">Home</a></li>
-                <li><a href="/login" class="nav-link">Sign In</a></li>
-                <li><a href="/register" class="nav-link">Register</a></li>
+                <li><a href="/login.html" class="nav-link">Sign In</a></li>
+                <li><a href="/register.html" class="nav-link">Register</a></li>
                 <li><button type="button" onclick="openPortalModal()" class="btn btn-primary btn-sm">Portal ▾</button></li>
             </ul>
         </nav>
@@ -44,7 +44,7 @@
                     <button type="button" onclick="openPortalModal()" class="btn btn-primary" id="btnOpenPortal" style="padding: 1rem 2.4rem; font-size: 1.15rem; box-shadow: 0 6px 24px rgba(245, 158, 11, 0.45);">
                         <span>Enter Portal</span> &rarr;
                     </button>
-                    <a href="/login" class="btn btn-outline" id="btnHeroDemo" style="padding: 1rem 2rem; font-size: 1.05rem;">
+                    <a href="/login.html" class="btn btn-outline" id="btnHeroDemo" style="padding: 1rem 2rem; font-size: 1.05rem;">
                         <span>Quick Demo Login</span>
                     </a>
                 </div>
@@ -105,7 +105,7 @@
             <!-- Two Role Cards Grid -->
             <div class="portal-roles-grid">
                 <!-- Passenger Card -->
-                <a href="/passenger/dashboard" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
+                <a href="/passenger-dashboard.html" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
                     <div style="width:68px; height:68px; border-radius:50%; background:rgba(59,130,246,0.15); display:flex; align-items:center; justify-content:center; font-size:2.2rem; border:1px solid rgba(59,130,246,0.3);">
                         🚶
                     </div>
@@ -119,7 +119,7 @@
                 </a>
 
                 <!-- Driver Card -->
-                <a href="/driver/dashboard" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
+                <a href="/driver-dashboard.html" class="portal-role-card" style="background:rgba(15,23,42,0.85); border:2px solid var(--border-glass); border-radius:16px; padding:2rem 1.4rem; text-align:center; transition:var(--transition); display:flex; flex-direction:column; align-items:center; gap:0.9rem; text-decoration:none; color:inherit;">
                     <div style="width:68px; height:68px; border-radius:50%; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; font-size:2.2rem; border:1px solid rgba(245,158,11,0.3);">
                         🛺
                     </div>

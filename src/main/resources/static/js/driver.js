@@ -173,6 +173,17 @@ function handlePositionError(error) {
  * Sends the latitude, longitude, and accuracy to the Spring Boot REST API.
  */
 async function sendLocationToBackend(latitude, longitude, accuracy) {
+    const lastUpdatedEl = document.getElementById('hudLastUpdated');
+    if (lastUpdatedEl) {
+        lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         window.location.port !== '8080';
+
+    if (isStaticHost) return;
+
     try {
         const response = await fetch('/api/driver/location', {
             method: 'POST',
@@ -186,17 +197,14 @@ async function sendLocationToBackend(latitude, longitude, accuracy) {
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Server returned ' + response.status);
-        }
-
-        const data = await response.json();
-        const lastUpdatedEl = document.getElementById('hudLastUpdated');
-        if (lastUpdatedEl && data.lastUpdated) {
-            lastUpdatedEl.textContent = data.lastUpdated;
+        if (response.ok) {
+            const data = await response.json();
+            if (lastUpdatedEl && data.lastUpdated) {
+                lastUpdatedEl.textContent = data.lastUpdated;
+            }
         }
     } catch (err) {
-        console.error('Failed to transmit location to backend:', err);
+        console.warn('Backend sync unavailable (running in local demo mode):', err.message);
     }
 }
 
@@ -204,20 +212,34 @@ async function sendLocationToBackend(latitude, longitude, accuracy) {
  * Updates driver availability state in backend (Available / Busy).
  */
 async function updateDriverAvailability(isAvailable) {
+    const statusText = document.getElementById('availabilityStatusText');
+    if (statusText) {
+        statusText.textContent = isAvailable ? 'Available for Rides' : 'Busy / Off-Duty';
+        statusText.style.color = isAvailable ? 'var(--accent-emerald)' : 'var(--text-muted)';
+    }
+
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         window.location.port !== '8080';
+
+    if (isStaticHost) {
+        showToast(isAvailable ? 'Driver status: Available for Rides (Demo Mode)' : 'Driver status: Busy / Off-Duty (Demo Mode)', isAvailable ? 'success' : 'info');
+        return;
+    }
+
     try {
         const response = await fetch(`/api/driver/availability?available=${isAvailable}`, {
             method: 'POST'
         });
 
-        const data = await response.json();
-        const statusText = document.getElementById('availabilityStatusText');
-        if (statusText) {
-            statusText.textContent = isAvailable ? 'Available for Rides' : 'Busy / Off-Duty';
-            statusText.style.color = isAvailable ? 'var(--accent-emerald)' : 'var(--text-muted)';
+        if (response.ok) {
+            const data = await response.json();
+            showToast(data.message, isAvailable ? 'success' : 'info');
+        } else {
+            showToast(`Status updated: ${isAvailable ? 'Available' : 'Busy'}`, isAvailable ? 'success' : 'info');
         }
-        showToast(data.message, isAvailable ? 'success' : 'info');
     } catch (err) {
-        showToast('Error updating availability: ' + err.message, 'danger');
+        showToast(`Status updated: ${isAvailable ? 'Available' : 'Busy'} (Demo)`, isAvailable ? 'success' : 'info');
     }
 }
 
@@ -225,6 +247,18 @@ async function updateDriverAvailability(isAvailable) {
  * Fetches the driver's current saved profile and status on page load.
  */
 async function fetchCurrentDriverStatus() {
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         window.location.port !== '8080';
+
+    if (isStaticHost) {
+        const lastUpdatedEl = document.getElementById('hudLastUpdated');
+        if (lastUpdatedEl) {
+            lastUpdatedEl.textContent = 'Ready (GPS Telemetry Active)';
+        }
+        return;
+    }
+
     try {
         const response = await fetch('/api/driver/status');
         if (!response.ok) return;
@@ -250,7 +284,7 @@ async function fetchCurrentDriverStatus() {
             }
         }
     } catch (err) {
-        console.error('Error fetching driver status:', err);
+        console.warn('Driver status fetch skipped:', err.message);
     }
 }
 

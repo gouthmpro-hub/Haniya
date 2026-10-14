@@ -193,29 +193,43 @@ function setPassengerLocation(lat, lng, panMap = true) {
     fetchNearbyAutos();
 }
 
+let staticSimStep = 0;
+
 /**
  * Fetches nearby available auto-rickshaws from the Spring Boot REST API.
+ * On static hosting (e.g. Vercel), smoothly simulates live auto movement.
  */
 async function fetchNearbyAutos() {
-    try {
-        const url = `/api/passenger/nearby-autos?lat=${currentPassengerLat}&lng=${currentPassengerLng}&radius=${currentRadiusKm}`;
-        const response = await fetch(url);
-        if (response.ok) {
-            const data = await response.json();
-            renderNearbyAutos(data.autos || []);
-            return;
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         window.location.port !== '8080';
+
+    if (!isStaticHost) {
+        try {
+            const url = `/api/passenger/nearby-autos?lat=${currentPassengerLat}&lng=${currentPassengerLng}&radius=${currentRadiusKm}`;
+            const response = await fetch(url);
+            if (response.ok) {
+                const data = await response.json();
+                renderNearbyAutos(data.autos || []);
+                return;
+            }
+        } catch (err) {
+            // Fall through to client-side fallback
         }
-    } catch (err) {
-        // Fall through to client-side fallback
     }
 
-    // Static fallback for Vercel / offline mode
-    const lat1 = currentPassengerLat + 0.0035;
-    const lon1 = currentPassengerLng + 0.0042;
+    // Static fallback for Vercel / offline presentation mode
+    staticSimStep++;
+    const drift1Lat = 0.0035 + (0.0003 * Math.sin(staticSimStep * 0.4));
+    const drift1Lng = 0.0042 + (0.0003 * Math.cos(staticSimStep * 0.4));
+    const lat1 = currentPassengerLat + drift1Lat;
+    const lon1 = currentPassengerLng + drift1Lng;
     const d1 = calculateHaversineKm(currentPassengerLat, currentPassengerLng, lat1, lon1);
 
-    const lat2 = currentPassengerLat - 0.0048;
-    const lon2 = currentPassengerLng + 0.0031;
+    const drift2Lat = -0.0048 + (0.00025 * Math.cos(staticSimStep * 0.3));
+    const drift2Lng = 0.0031 + (0.00025 * Math.sin(staticSimStep * 0.3));
+    const lat2 = currentPassengerLat + drift2Lat;
+    const lon2 = currentPassengerLng + drift2Lng;
     const d2 = calculateHaversineKm(currentPassengerLat, currentPassengerLng, lat2, lon2);
 
     const fallbackAutos = [
@@ -398,6 +412,15 @@ function highlightSidebarCard(driverId) {
  * Connects to Spring Boot STOMP WebSocket for real-time driver coordinates push.
  */
 function initWebSocket() {
+    const isStatic = window.location.hostname.includes('vercel.app') || 
+                     window.location.hostname.includes('github.io') || 
+                     (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+
+    if (isStatic && !window.location.hostname.includes('localhost')) {
+        console.log('Running on static host (Vercel) - WebSocket disabled, using dynamic simulated telemetry.');
+        return;
+    }
+
     try {
         const socket = new SockJS('/ws-auto-tracking');
         stompClient = Stomp.over(socket);

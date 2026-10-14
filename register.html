@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | GPS Auto Tracking</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body style="display:flex; flex-direction:column; min-height:100vh;">
 
@@ -128,9 +128,9 @@
                 e.preventDefault();
                 alert('Account registered successfully! Redirecting...');
                 if (currentRole === 'DRIVER') {
-                    window.location.href = '/driver/dashboard';
+                    window.location.href = '/driver-dashboard.html';
                 } else {
-                    window.location.href = '/passenger/dashboard';
+                    window.location.href = '/passenger-dashboard.html';
                 }
             }
         }
