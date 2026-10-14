@@ -69,4 +69,11 @@ public class PageController {
         model.addAttribute("user", driver.getUser());
         return "driver-dashboard";
     }
+
+    @GetMapping({"/admin/drivers", "/admin-dashboard.html", "/admin"})
+    public String adminDrivers(Model model) {
+        model.addAttribute("drivers", driverService.getAllDrivers());
+        model.addAttribute("stats", driverService.getFleetStats());
+        return "admin-drivers";
+    }
 }

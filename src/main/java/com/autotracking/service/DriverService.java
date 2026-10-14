@@ -1,6 +1,8 @@
 package com.autotracking.service;
 
+import com.autotracking.dto.DriverFleetStatsDTO;
 import com.autotracking.dto.DriverLocationBroadcastDTO;
+import com.autotracking.dto.DriverManagementDTO;
 import com.autotracking.dto.DriverStatusDTO;
 import com.autotracking.model.Driver;
 import com.autotracking.model.DriverLocation;
@@ -12,8 +14,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class DriverService {
@@ -74,6 +79,116 @@ public class DriverService {
         Driver driver = getDriverByUserEmail(email);
         Optional<DriverLocation> locationOpt = locationRepository.findByDriver(driver);
         return buildStatusDTO(driver, locationOpt.orElse(null), true);
+    }
+
+    public List<DriverManagementDTO> getAllDrivers() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
+        LocalDateTime activeCutoff = LocalDateTime.now().minusSeconds(120);
+
+        return driverRepository.findAll().stream().map(driver -> {
+            Optional<DriverLocation> locOpt = locationRepository.findByDriver(driver);
+            String lastSeen = locOpt.map(loc -> loc.getLastUpdated() != null ? loc.getLastUpdated().format(formatter) : "Never").orElse("No coordinates recorded");
+            boolean activeGps = locOpt.map(loc -> loc.getLastUpdated() != null && loc.getLastUpdated().isAfter(activeCutoff)).orElse(false);
+
+            return new DriverManagementDTO(
+                    driver.getId(),
+                    driver.getUser().getName(),
+                    driver.getUser().getEmail(),
+                    driver.getPhone(),
+                    driver.getAutoRegistrationNumber(),
+                    driver.isAvailable(),
+                    locOpt.map(DriverLocation::getLatitude).orElse(null),
+                    locOpt.map(DriverLocation::getLongitude).orElse(null),
+                    locOpt.map(DriverLocation::getAccuracy).orElse(null),
+                    lastSeen,
+                    activeGps
+            );
+        }).collect(Collectors.toList());
+    }
+
+    public DriverFleetStatsDTO getFleetStats() {
+        List<Driver> all = driverRepository.findAll();
+        long total = all.size();
+        long available = all.stream().filter(Driver::isAvailable).count();
+        long busy = total - available;
+        LocalDateTime activeCutoff = LocalDateTime.now().minusSeconds(120);
+        long activeGps = locationRepository.findAll().stream()
+                .filter(loc -> loc.getLastUpdated() != null && loc.getLastUpdated().isAfter(activeCutoff))
+                .count();
+
+        return new DriverFleetStatsDTO(total, available, busy, activeGps);
+    }
+
+    @Transactional
+    public void deleteDriver(Long driverId) {
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new IllegalArgumentException("Driver not found with ID: " + driverId));
+
+        // 1. Remove associated location record
+        locationRepository.findByDriver(driver).ifPresent(locationRepository::delete);
+
+        // 2. Broadcast removal via WebSocket to connected passengers so map pins disappear instantly
+        DriverLocationBroadcastDTO broadcast = new DriverLocationBroadcastDTO(
+                driver.getId(),
+                driver.getUser().getName(),
+                driver.getAutoRegistrationNumber(),
+                null,
+                null,
+                0.0,
+                false,
+                "DRIVER_REMOVED"
+        );
+        messagingTemplate.convertAndSend("/topic/driver-updates", broadcast);
+
+        // 3. Delete Driver record
+        User user = driver.getUser();
+        driverRepository.delete(driver);
+
+        // 4. Delete user account
+        if (user != null) {
+            userRepository.delete(user);
+        }
+    }
+
+    @Transactional
+    public DriverManagementDTO toggleDriverAvailability(Long driverId) {
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new IllegalArgumentException("Driver not found with ID: " + driverId));
+        driver.setAvailable(!driver.isAvailable());
+        driverRepository.save(driver);
+
+        Optional<DriverLocation> locOpt = locationRepository.findByDriver(driver);
+
+        // Broadcast to WebSocket
+        DriverLocationBroadcastDTO broadcast = new DriverLocationBroadcastDTO(
+                driver.getId(),
+                driver.getUser().getName(),
+                driver.getAutoRegistrationNumber(),
+                locOpt.map(DriverLocation::getLatitude).orElse(null),
+                locOpt.map(DriverLocation::getLongitude).orElse(null),
+                locOpt.map(DriverLocation::getAccuracy).orElse(0.0),
+                driver.isAvailable(),
+                driver.isAvailable() ? "AVAILABILITY_CHANGE" : "WENT_OFFLINE"
+        );
+        messagingTemplate.convertAndSend("/topic/driver-updates", broadcast);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm a");
+        String lastSeen = locOpt.map(loc -> loc.getLastUpdated() != null ? loc.getLastUpdated().format(formatter) : "Never").orElse("No coordinates recorded");
+        boolean activeGps = locOpt.map(loc -> loc.getLastUpdated() != null && loc.getLastUpdated().isAfter(LocalDateTime.now().minusSeconds(120))).orElse(false);
+
+        return new DriverManagementDTO(
+                driver.getId(),
+                driver.getUser().getName(),
+                driver.getUser().getEmail(),
+                driver.getPhone(),
+                driver.getAutoRegistrationNumber(),
+                driver.isAvailable(),
+                locOpt.map(DriverLocation::getLatitude).orElse(null),
+                locOpt.map(DriverLocation::getLongitude).orElse(null),
+                locOpt.map(DriverLocation::getAccuracy).orElse(null),
+                lastSeen,
+                activeGps
+        );
     }
 
     private DriverStatusDTO buildStatusDTO(Driver driver, DriverLocation location, boolean locationSharingActive) {

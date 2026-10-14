@@ -20,6 +20,7 @@
             </a>
             <ul class="nav-links">
                 <li><a th:href="@{/}" class="nav-link active">Home</a></li>
+                <li><a th:href="@{/admin/drivers}" class="nav-link">Fleet Roster</a></li>
                 <li th:if="${!authenticated}"><a th:href="@{/login}" class="nav-link">Sign In</a></li>
                 <li th:if="${!authenticated}"><a th:href="@{/register}" class="nav-link">Register</a></li>
                 <li><button type="button" onclick="openPortalModal()" class="btn btn-primary btn-sm">Portal ▾</button></li>
@@ -135,6 +136,13 @@
                     <span class="btn btn-primary btn-sm btn-block" style="margin-top:auto;">
                         Enter as Driver &rarr;
                     </span>
+                </a>
+            </div>
+
+            <!-- Admin / Fleet Management Link -->
+            <div style="margin-top:1.6rem; padding-top:1.2rem; border-top:1px solid var(--border-glass); text-align:center;">
+                <a th:href="@{/admin/drivers}" style="font-size:0.9rem; color:var(--accent-amber); text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600;">
+                    <span>📊</span> View Registered Drivers & Fleet Roster &rarr;
                 </a>
             </div>
         </div>

@@ -18,6 +18,10 @@ public interface DriverLocationRepository extends JpaRepository<DriverLocation, 
 
     Optional<DriverLocation> findByDriverId(Long driverId);
 
+    void deleteByDriverId(Long driverId);
+
+    void deleteByDriver(Driver driver);
+
     /**
      * Finds all driver locations where:
      * 1. Driver availability status is TRUE

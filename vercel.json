@@ -7,6 +7,10 @@
     { "source": "/driver/dashboard", "destination": "/driver/dashboard/index.html" },
     { "source": "/driver/dashboard/", "destination": "/driver/dashboard/index.html" },
     { "source": "/driver-dashboard", "destination": "/driver-dashboard.html" },
+    { "source": "/admin/drivers", "destination": "/admin/drivers/index.html" },
+    { "source": "/admin/drivers/", "destination": "/admin/drivers/index.html" },
+    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
+    { "source": "/admin", "destination": "/admin-dashboard.html" },
     { "source": "/login", "destination": "/login.html" },
     { "source": "/register", "destination": "/register.html" }
   ]

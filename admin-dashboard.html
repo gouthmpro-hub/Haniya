@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Fleet Management | GPS Auto Tracking</title>
+    <meta name="description" content="View registered auto drivers, live availability status, and manage or remove drivers from the GPS dispatch portal.">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body style="min-height: 100vh; display: flex; flex-direction: column;">
+
+    <!-- Navigation Bar -->
+    <header>
+        <nav class="navbar" style="padding: 0.8rem 2rem;">
+            <a href="/" class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                </div>
+                <div class="brand-text">Fleet<span>Manager</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/passenger-dashboard.html" class="nav-link">Passenger Map</a></li>
+                <li><a href="/driver-dashboard.html" class="nav-link">Driver Portal</a></li>
+                <li><a href="/admin-dashboard.html" class="nav-link active">Fleet Roster</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main style="flex:1; max-width:1250px; width:100%; margin:0 auto; padding:2.5rem 1.5rem;">
+        
+        <!-- Header Banner -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1.2rem; margin-bottom:2rem;">
+            <div>
+                <div class="hero-badge" style="margin-bottom:0.6rem;">ADMIN & FLEET TELEMETRY</div>
+                <h1 style="font-size:2.4rem; margin-bottom:0.4rem;">Registered <span>Auto Drivers</span></h1>
+                <p style="color:var(--text-muted); font-size:0.95rem;">
+                    Monitor all registered drivers in the dispatch network, track live availability, and manage or remove drivers.
+                </p>
+            </div>
+            <div style="display:flex; gap:0.8rem; align-items:center;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="loadFleetData()">
+                    🔄 Refresh Data
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="resetFleetDemo()" style="color:var(--accent-amber); border-color:rgba(245,158,11,0.3);">
+                    ⚡ Reset Demo Drivers
+                </button>
+            </div>
+        </div>
+
+        <!-- 3 Fleet Metric Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:1.4rem; margin-bottom:2.2rem;">
+            
+            <!-- Total Registered Drivers -->
+            <div class="glass-card" style="padding:1.6rem; display:flex; align-items:center; gap:1.2rem; border-left:4px solid var(--accent-amber);">
+                <div style="width:56px; height:56px; border-radius:12px; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; font-size:1.8rem; border:1px solid rgba(245,158,11,0.3);">
+                    🛺
+                </div>
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">
+                        Total Registered Drivers
+                    </div>
+                    <div style="font-size:2.2rem; font-weight:800; color:var(--text-main); font-family:var(--font-display);" id="statTotalDrivers">
+                        3
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available for Rides -->
+            <div class="glass-card" style="padding:1.6rem; display:flex; align-items:center; gap:1.2rem; border-left:4px solid var(--accent-emerald);">
+                <div style="width:56px; height:56px; border-radius:12px; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center; font-size:1.8rem; border:1px solid rgba(16,185,129,0.3);">
+                    🟢
+                </div>
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">
+                        Available for Rides
+                    </div>
+                    <div style="font-size:2.2rem; font-weight:800; color:var(--accent-emerald); font-family:var(--font-display);" id="statAvailableDrivers">
+                        2
+                    </div>
+                </div>
+            </div>
+
+            <!-- Busy / Off-Duty -->
+            <div class="glass-card" style="padding:1.6rem; display:flex; align-items:center; gap:1.2rem; border-left:4px solid #ef4444;">
+                <div style="width:56px; height:56px; border-radius:12px; background:rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; font-size:1.8rem; border:1px solid rgba(239,68,68,0.3);">
+                    🔴
+                </div>
+                <div>
+                    <div style="font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; letter-spacing:0.04em;">
+                        Busy / Off-Duty
+                    </div>
+                    <div style="font-size:2.2rem; font-weight:800; color:#fca5a5; font-family:var(--font-display);" id="statBusyDrivers">
+                        1
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Drivers Roster Table Card -->
+        <div class="glass-card" style="padding:0; overflow:hidden;">
+            
+            <!-- Table Header Bar & Search -->
+            <div style="padding:1.4rem 1.6rem; border-bottom:1px solid var(--border-glass); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <h3 style="font-size:1.25rem;">Fleet Roster</h3>
+                    <span id="tableCountBadge" class="auto-badge" style="background:rgba(245,158,11,0.12); color:var(--accent-amber); border-color:rgba(245,158,11,0.3);">
+                        3 Drivers
+                    </span>
+                </div>
+
+                <!-- Search Input -->
+                <div style="width:320px; max-width:100%;">
+                    <input type="text" id="driverSearchInput" class="form-control" placeholder="Search by name, auto no, phone..." style="padding:0.6rem 1rem; font-size:0.88rem;">
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.92rem;">
+                    <thead>
+                        <tr style="background:rgba(15,23,42,0.8); border-bottom:1px solid var(--border-glass); color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
+                            <th style="padding:0.9rem 1rem;">Driver Details</th>
+                            <th style="padding:0.9rem 1rem;">Contact</th>
+                            <th style="padding:0.9rem 1rem;">Vehicle No.</th>
+                            <th style="padding:0.9rem 1rem;">Availability</th>
+                            <th style="padding:0.9rem 1rem;">GPS Location</th>
+                            <th style="padding:0.9rem 1rem; text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversTableBody">
+                        <!-- Populated dynamically via admin.js -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border-glass); color: var(--text-dim); font-size: 0.88rem; margin-top: auto;">
+        GPS-Based Auto Tracking System &bull; Fleet Administration Console &bull; BTech S3 Mini Project
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/admin.js"></script>
+
+</body>
+</html>
