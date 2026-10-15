@@ -579,6 +579,75 @@ a:hover {
   color: var(--text-main);
 }
 
+/* Nearest Auto & Kilometer Difference Highlighting */
+.nearby-card.nearest-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 1.5px solid var(--accent-emerald);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+  position: relative;
+}
+
+.nearby-card.nearest-card:hover {
+  border-color: #34d399;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(245, 158, 11, 0.14) 100%);
+}
+
+.badge-nearest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  text-transform: uppercase;
+}
+
+.badge-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-glass);
+}
+
+.km-difference-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-amber);
+}
+
+.km-difference-indicator.nearest-indicator {
+  border-left-color: var(--accent-emerald);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.distance-route-tooltip {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--accent-amber);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
 /* Custom Marker Styling in Leaflet */
 .custom-auto-marker {
   display: flex;

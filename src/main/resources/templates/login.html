@@ -137,7 +137,7 @@
         }
 
         function quickDemoLogin(phone, name, pass) {
-            document.getElementById('loginPhone').value = phone.replace('+91 ', '');
+            document.getElementById('loginPhone').value = phone.replace('+91 ', '').trim();
             document.getElementById('loginPassword').value = pass;
             
             const profile = {
@@ -147,7 +147,12 @@
             };
             localStorage.setItem('autotrack_current_user', JSON.stringify(profile));
 
-            handleDirectLogin(new Event('submit'));
+            const form = document.querySelector('form');
+            if (form && form.requestSubmit) {
+                form.requestSubmit();
+            } else {
+                handleDirectLogin(new Event('submit'));
+            }
         }
     </script>
 </body>

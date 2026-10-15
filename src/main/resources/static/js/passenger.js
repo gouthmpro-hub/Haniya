@@ -12,9 +12,11 @@ let radiusCircle = null;
 let autoMarkersMap = new Map(); // driverId -> L.marker
 let currentPassengerLat = 9.9825; // Default center (Kochi Marine Drive)
 let currentPassengerLng = 76.2820;
-let currentRadiusKm = 5.0;
+let currentRadiusKm = 15.0;
 let stompClient = null;
 let pollTimer = null;
+let activeRouteLine = null;
+let currentAutosList = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initPassengerUserProfile();
@@ -422,9 +424,18 @@ async function fetchNearbyAutos() {
 /**
  * Renders auto-rickshaw markers on the Leaflet map and cards in the sidebar list.
  */
+/**
+ * Renders auto-rickshaw markers on the Leaflet map and cards in the sidebar list.
+ * Automatically sorts by distance and calculates the exact kilometer difference
+ * between each driver and the #1 closest driver to the passenger.
+ */
 function renderNearbyAutos(autos) {
     const listContainer = document.getElementById('nearbyAutosList');
     const countBadge = document.getElementById('nearbyCountBadge');
+
+    // Strict proximity sorting: closest auto is always at index 0
+    autos.sort((a, b) => Number(a.distanceKm) - Number(b.distanceKm));
+    currentAutosList = autos;
 
     if (countBadge) {
         countBadge.textContent = `${autos.length} Available`;
@@ -444,42 +455,84 @@ function renderNearbyAutos(autos) {
     if (!listContainer) return;
 
     if (autos.length === 0) {
+        if (activeRouteLine && passengerMap) {
+            passengerMap.removeLayer(activeRouteLine);
+            activeRouteLine = null;
+        }
         listContainer.innerHTML = `
             <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-dim);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛺</div>
                 <h4 style="color: var(--text-muted); margin-bottom: 0.4rem;">No Registered Drivers Active Nearby</h4>
                 <p style="font-size: 0.85rem; line-height: 1.5;">Strict policy: Only registered drivers manually added via the Admin Fleet Console appear on this map.</p>
+                <a href="/admin-dashboard.html" class="btn btn-outline btn-sm" style="margin-top:1rem; display:inline-flex; align-items:center; gap:0.4rem;">
+                    ➕ Add Drivers in Fleet Manager
+                </a>
             </div>
         `;
         return;
     }
 
+    const nearestKm = Number(autos[0].distanceKm);
+
     let listHtml = '';
 
-    autos.forEach(auto => {
-        // 1. Update or create Leaflet Map Marker
-        updateOrCreateAutoMarker(auto);
+    autos.forEach((auto, index) => {
+        const distKm = Number(auto.distanceKm);
+        const diffKm = Number((distKm - nearestKm).toFixed(2));
+        const isNearest = (index === 0);
 
-        // 2. Build Sidebar Card HTML
+        const distFormatted = distKm < 1.0
+            ? `${Math.round(distKm * 1000)} meters (${distKm.toFixed(2)} km)`
+            : `${distKm.toFixed(2)} km`;
+
+        // 1. Update or create Leaflet Map Marker with proximity data
+        updateOrCreateAutoMarker(auto, isNearest, diffKm, index);
+
+        // 2. Build Sidebar Card HTML highlighting proximity and kilometer difference
         listHtml += `
-            <div class="nearby-card" onclick="focusAutoMarker(${auto.driverId}, ${auto.latitude}, ${auto.longitude})" id="auto-card-${auto.driverId}">
-                <div class="nearby-header">
-                    <span class="driver-name">${escapeHtml(auto.driverName)}</span>
+            <div class="nearby-card ${isNearest ? 'nearest-card' : ''}" onclick="focusAutoMarker(${auto.driverId}, ${auto.latitude}, ${auto.longitude})" id="auto-card-${auto.driverId}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+                    ${isNearest ? `
+                        <span class="badge-nearest">🏆 NEAREST AUTO TO YOU</span>
+                    ` : `
+                        <span class="badge-rank">#${index + 1} • +${diffKm} km farther</span>
+                    `}
                     <span class="auto-badge">${escapeHtml(auto.autoRegistrationNumber)}</span>
                 </div>
-                <div class="nearby-meta">
+
+                <div class="nearby-header">
+                    <span class="driver-name">${escapeHtml(auto.driverName)}</span>
+                    <span style="font-weight:700; color:${isNearest ? 'var(--accent-emerald)' : 'var(--accent-amber)'}; font-size:1.05rem;">
+                        ${distFormatted}
+                    </span>
+                </div>
+
+                <div class="nearby-meta" style="margin-top:0.35rem;">
                     <div class="meta-item">
                         <span>📍</span>
-                        <strong>${auto.distanceKm} km away</strong>
+                        <span>Distance: <strong>${distFormatted}</strong></span>
                     </div>
                     <div class="meta-item">
                         <span>⏱️</span>
-                        <strong>ETA ~${auto.etaMinutes} min</strong>
+                        <span>ETA: <strong>~${auto.etaMinutes} min</strong></span>
                     </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; font-size:0.8rem; color:var(--text-muted);">
-                    <span>📞 <a href="tel:${auto.phone}" style="color:var(--accent-amber);">${escapeHtml(auto.phone)}</a></span>
-                    <span style="color:var(--accent-emerald);">● Online</span>
+
+                ${isNearest ? `
+                    <div class="km-difference-indicator nearest-indicator" style="margin-top:0.4rem;">
+                        <span>⚡ Proximity Rank:</span>
+                        <strong style="color:var(--accent-emerald);">Fastest pickup (~${auto.etaMinutes} min away)</strong>
+                    </div>
+                ` : `
+                    <div class="km-difference-indicator" style="margin-top:0.4rem;">
+                        <span>📏 Km Difference:</span>
+                        <span><strong>+${diffKm} km</strong> farther than <em>${escapeHtml(autos[0].driverName)}</em></span>
+                    </div>
+                `}
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; font-size:0.8rem; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:0.35rem;">
+                    <span>📞 <a href="tel:${auto.phone}" style="color:var(--accent-amber); font-weight:600; text-decoration:none;">${escapeHtml(auto.phone)}</a></span>
+                    <span style="color:var(--accent-emerald); font-weight:600;">● Available</span>
                 </div>
             </div>
         `;
@@ -489,14 +542,17 @@ function renderNearbyAutos(autos) {
 }
 
 /**
- * Creates or updates an individual auto marker on the Leaflet map.
+ * Creates or updates an individual auto marker on the Leaflet map with kilometer difference data.
  */
-function updateOrCreateAutoMarker(auto) {
+function updateOrCreateAutoMarker(auto, isNearest = false, diffKm = 0, index = 0) {
+    const borderColor = isNearest ? '#10b981' : '#f59e0b';
+    const badgeText = isNearest ? '🏆 #1 Nearest' : `#${index + 1} (+${diffKm} km)`;
+
     const autoIcon = L.divIcon({
         className: 'auto-marker-icon',
         html: `
-            <div class="custom-auto-marker" title="${escapeHtml(auto.driverName)} (${auto.autoRegistrationNumber})">
-                <svg viewBox="0 0 24 24">
+            <div class="custom-auto-marker" style="border-color:${borderColor}; box-shadow:0 0 16px ${isNearest ? 'rgba(16,185,129,0.7)' : 'rgba(245,158,11,0.5)'};" title="${escapeHtml(auto.driverName)} (${auto.autoRegistrationNumber})">
+                <svg viewBox="0 0 24 24" style="fill:${borderColor};">
                     <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
                 </svg>
             </div>
@@ -506,36 +562,47 @@ function updateOrCreateAutoMarker(auto) {
     });
 
     const popupContent = `
-        <div style="padding: 6px; font-family: var(--font-body);">
-            <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; color: #f59e0b; margin-bottom: 2px;">
+        <div style="padding: 6px; font-family: var(--font-body); min-width: 200px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="background:${isNearest ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}; color:${isNearest ? '#34d399' : '#fbbf24'}; font-size:0.75rem; font-weight:800; padding:2px 6px; border-radius:4px; border:1px solid ${isNearest ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)'};">
+                    ${badgeText}
+                </span>
+                <span style="font-size:0.75rem; color:#94a3b8; font-weight:700;">${escapeHtml(auto.autoRegistrationNumber)}</span>
+            </div>
+            <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; color: ${isNearest ? '#34d399' : '#f59e0b'}; margin-bottom: 2px;">
                 ${escapeHtml(auto.driverName)}
             </div>
-            <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px;">
-                Auto: <strong style="color:#f8fafc;">${escapeHtml(auto.autoRegistrationNumber)}</strong>
-            </div>
-            <div style="display:flex; gap:12px; font-size:0.85rem; margin-bottom:6px;">
-                <span>📍 <strong>${auto.distanceKm} km</strong></span>
+            <div style="display:flex; gap:12px; font-size:0.88rem; margin:6px 0; color:#e2e8f0;">
+                <span>📍 <strong>${auto.distanceKm} km away</strong></span>
                 <span>⏱️ <strong>~${auto.etaMinutes} min ETA</strong></span>
             </div>
-            <div style="font-size: 0.85rem;">
+            ${!isNearest ? `
+                <div style="font-size:0.8rem; color:#fbbf24; margin-bottom:6px; background:rgba(245,158,11,0.1); padding:3px 6px; border-radius:4px;">
+                    📏 <strong>+${diffKm} km farther</strong> than closest auto
+                </div>
+            ` : `
+                <div style="font-size:0.8rem; color:#34d399; margin-bottom:6px; background:rgba(16,185,129,0.1); padding:3px 6px; border-radius:4px;">
+                    ⚡ <strong>Closest auto</strong> available right now
+                </div>
+            `}
+            <div style="font-size: 0.85rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:4px;">
                 📞 <a href="tel:${auto.phone}" style="color: #10b981; font-weight: 600;">${escapeHtml(auto.phone)}</a>
             </div>
         </div>
     `;
 
     if (autoMarkersMap.has(auto.driverId)) {
-        // Smoothly update existing marker's position and popup
         const existingMarker = autoMarkersMap.get(auto.driverId);
         existingMarker.setLatLng([auto.latitude, auto.longitude]);
+        existingMarker.setIcon(autoIcon);
         existingMarker.setPopupContent(popupContent);
     } else {
-        // Create new marker
         const marker = L.marker([auto.latitude, auto.longitude], { icon: autoIcon })
             .addTo(passengerMap)
             .bindPopup(popupContent);
 
         marker.on('click', () => {
-            highlightSidebarCard(auto.driverId);
+            focusAutoMarker(auto.driverId, auto.latitude, auto.longitude);
         });
 
         autoMarkersMap.set(auto.driverId, marker);
@@ -543,12 +610,48 @@ function updateOrCreateAutoMarker(auto) {
 }
 
 /**
- * Focuses and animates map to the selected auto marker from the sidebar list.
+ * Focuses map, connects direct route line, and highlights sidebar card.
  */
 function focusAutoMarker(driverId, lat, lng) {
-    if (passengerMap) {
-        passengerMap.flyTo([lat, lng], 16, { duration: 1.2 });
+    // 1. Remove previous route line
+    if (activeRouteLine && passengerMap) {
+        passengerMap.removeLayer(activeRouteLine);
+        activeRouteLine = null;
     }
+
+    const auto = currentAutosList.find(a => a.driverId === driverId);
+    const nearestKm = currentAutosList.length > 0 ? Number(currentAutosList[0].distanceKm) : 0;
+
+    if (auto && passengerMap) {
+        const distKm = Number(auto.distanceKm);
+        const diffKm = Number((distKm - nearestKm).toFixed(2));
+        const isNearest = (auto.driverId === currentAutosList[0].driverId);
+
+        // 2. Draw direct connection line showing exact distance
+        const lineColor = isNearest ? '#10b981' : '#f59e0b';
+        activeRouteLine = L.polyline([[currentPassengerLat, currentPassengerLng], [lat, lng]], {
+            color: lineColor,
+            weight: 3.5,
+            opacity: 0.9,
+            dashArray: '8, 8'
+        }).addTo(passengerMap);
+
+        const diffSnippet = (!isNearest && diffKm > 0) ? ` (+${diffKm} km farther)` : ' (🏆 Closest)';
+        activeRouteLine.bindTooltip(`📏 ${distKm} km direct line${diffSnippet} • ETA ~${auto.etaMinutes} min`, {
+            permanent: true,
+            direction: 'center',
+            className: 'distance-route-tooltip'
+        }).openTooltip();
+
+        // 3. Smoothly fit bounds to view both passenger and the auto
+        passengerMap.fitBounds([[currentPassengerLat, currentPassengerLng], [lat, lng]], {
+            padding: [70, 70],
+            maxZoom: 16
+        });
+    } else if (passengerMap) {
+        passengerMap.flyTo([lat, lng], 15, { duration: 1.0 });
+    }
+
     const marker = autoMarkersMap.get(driverId);
     if (marker) {
         marker.openPopup();

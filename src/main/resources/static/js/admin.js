@@ -352,6 +352,116 @@ function closeAddDriverModal() {
 }
 
 /**
+ * Updates latitude and longitude inputs when a preset is chosen.
+ */
+function handleLocationPresetChange(val) {
+    if (!val || val === 'custom') return;
+    const parts = val.split(',');
+    if (parts.length === 2) {
+        const latInput = document.getElementById('manualDriverLat');
+        const lngInput = document.getElementById('manualDriverLng');
+        if (latInput) latInput.value = parseFloat(parts[0]).toFixed(4);
+        if (lngInput) lngInput.value = parseFloat(parts[1]).toFixed(4);
+    }
+}
+
+/**
+ * Quick-adds 3 distinct verified drivers with known, varying proximity distances:
+ * 1. Arun Kumar @ High Court (~0.8 km) - #1 Nearest
+ * 2. Suresh Nair @ MG Road Metro (~1.6 km) - +0.8 km difference
+ * 3. Mohammed Ali @ Kaloor Stadium (~2.6 km) - +1.8 km difference
+ */
+async function quickAdd3Drivers() {
+    const demoFleet = [
+        {
+            name: "Arun Kumar",
+            phone: "+91 98471 11111",
+            autoRegistrationNumber: "KL-07-CD-1111",
+            password: "password123",
+            available: true,
+            latitude: 9.9880,
+            longitude: 76.2760 // High Court Stand: ~0.8 km
+        },
+        {
+            name: "Suresh Nair",
+            phone: "+91 98472 22222",
+            autoRegistrationNumber: "KL-07-BG-2222",
+            password: "password123",
+            available: true,
+            latitude: 9.9715,
+            longitude: 76.2870 // MG Road Metro: ~1.6 km
+        },
+        {
+            name: "Mohammed Ali",
+            phone: "+91 98473 33333",
+            autoRegistrationNumber: "KL-07-EF-3333",
+            password: "password123",
+            available: true,
+            latitude: 9.9980,
+            longitude: 76.2990 // Kaloor Stadium: ~2.6 km
+        }
+    ];
+
+    showToast('Registering 3 test drivers at exact locations...', 'info');
+
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+
+    for (let i = 0; i < demoFleet.length; i++) {
+        const d = demoFleet[i];
+        const email = d.phone.replace(/[^0-9]/g, '') + '@autotrack.driver';
+        const payload = {
+            name: d.name,
+            email: email,
+            phone: d.phone,
+            autoRegistrationNumber: d.autoRegistrationNumber,
+            password: d.password,
+            available: d.available,
+            latitude: d.latitude,
+            longitude: d.longitude
+        };
+
+        if (!isStaticHost) {
+            try {
+                await fetch('/api/admin/drivers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.warn('API error for demo driver:', err);
+            }
+        }
+
+        // Cache locally for instant UI reflection & Vercel
+        try {
+            let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+            drivers = drivers.filter(existing => existing.autoRegistrationNumber !== d.autoRegistrationNumber);
+            drivers.push({
+                id: Date.now() + i,
+                driverId: Date.now() + i,
+                name: d.name,
+                driverName: d.name,
+                email: email,
+                phone: d.phone,
+                autoRegistrationNumber: d.autoRegistrationNumber,
+                available: d.available,
+                latitude: d.latitude,
+                longitude: d.longitude,
+                accuracy: 8.0,
+                lastUpdated: new Date().toLocaleTimeString(),
+                activeGps: true
+            });
+            localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+        } catch(e) {}
+    }
+
+    await loadFleetData();
+    showToast('⚡ 3 Drivers added: Arun (0.8 km), Suresh (1.6 km), Ali (2.6 km)!', 'success');
+}
+
+/**
  * Handles submission of manually added driver.
  */
 async function submitManualDriver(e) {
@@ -366,15 +476,22 @@ async function submitManualDriver(e) {
     // Internal fallback email
     const email = (phone.replace(/[^0-9]/g, '') || Date.now()) + '@autotrack.driver';
 
-    // Parse location preset
-    let lat = 9.9825;
-    let lng = 76.2820;
-    const presetEl = document.getElementById('manualDriverLocationPreset');
-    if (presetEl && presetEl.value) {
-        const parts = presetEl.value.split(',');
-        if (parts.length === 2) {
-            lat = parseFloat(parts[0]) + (Math.random() * 0.003 - 0.0015);
-            lng = parseFloat(parts[1]) + (Math.random() * 0.003 - 0.0015);
+    // Parse exact coordinates from inputs or preset
+    let lat = 9.9880;
+    let lng = 76.2760;
+    const latInput = document.getElementById('manualDriverLat');
+    const lngInput = document.getElementById('manualDriverLng');
+    if (latInput && lngInput && latInput.value && lngInput.value) {
+        lat = parseFloat(latInput.value);
+        lng = parseFloat(lngInput.value);
+    } else {
+        const presetEl = document.getElementById('manualDriverLocationPreset');
+        if (presetEl && presetEl.value && presetEl.value !== 'custom') {
+            const parts = presetEl.value.split(',');
+            if (parts.length === 2) {
+                lat = parseFloat(parts[0]);
+                lng = parseFloat(parts[1]);
+            }
         }
     }
 
@@ -448,6 +565,6 @@ async function submitManualDriver(e) {
     }
 
     closeAddDriverModal();
-    showToast(`Driver ${name} (${autoRegistrationNumber}) registered successfully!`, 'success');
+    showToast(`Driver ${name} (${autoRegistrationNumber}) registered successfully at (${payload.latitude}, ${payload.longitude})!`, 'success');
     await loadFleetData();
 }

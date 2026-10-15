@@ -50,7 +50,7 @@ public class PageController {
                 && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken);
     }
 
-    @GetMapping("/passenger/dashboard")
+    @GetMapping({"/passenger/dashboard", "/passenger-dashboard.html", "/passenger-dashboard"})
     public String passengerDashboard(Authentication authentication, Model model) {
         User user = userService.findByEmail(authentication.getName());
         if (user == null) {

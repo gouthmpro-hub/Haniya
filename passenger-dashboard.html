@@ -25,6 +25,9 @@
                     Hello, <strong id="passengerNameDisplay" style="color:var(--text-main);">Passenger</strong>
                     <span style="background:rgba(59,130,246,0.15); color:#60a5fa; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:6px; margin-left:6px; font-weight:600;">PASSENGER</span>
                 </div>
+                <a href="/admin-dashboard.html" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; text-decoration:none;">
+                    <span>➕</span> Add Drivers
+                </a>
                 <a href="/login" class="btn btn-outline btn-sm">Logout</a>
             </div>
         </nav>
@@ -67,17 +70,17 @@
                 </div>
 
                 <!-- Radius Slider -->
-                <div style="margin-bottom: 1.2rem;">
+                <div style="margin-bottom: 1rem;">
                     <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.4rem;">
                         <span style="color:var(--text-muted); font-weight:500;">Search Radius:</span>
-                        <strong id="radiusValue" style="color:var(--accent-amber);">5.0 km</strong>
+                        <strong id="radiusValue" style="color:var(--accent-amber);">15.0 km</strong>
                     </div>
-                    <input type="range" id="radiusSlider" min="1" max="15" step="0.5" value="5.0" style="width:100%; accent-color:var(--accent-amber); cursor:pointer;">
+                    <input type="range" id="radiusSlider" min="1" max="25" step="0.5" value="15.0" style="width:100%; accent-color:var(--accent-amber); cursor:pointer;">
                     <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-dim); margin-top:2px;">
                         <span>1 km</span>
                         <span>5 km</span>
-                        <span>10 km</span>
                         <span>15 km</span>
+                        <span>25 km</span>
                     </div>
                 </div>
 
