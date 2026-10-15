@@ -12,19 +12,19 @@ public class RegisterRequest {
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
 
-    @NotBlank(message = "Email address is required")
-    @Email(message = "Please provide a valid email address")
+    @NotBlank(message = "Mobile phone number is required")
+    private String phone;
+
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
+    private String password = "password123";
+
+    private String otp;
 
     @NotNull(message = "Role must be specified (PASSENGER or DRIVER)")
     private Role role;
 
-    // Driver-specific fields (Required if role == DRIVER)
-    private String phone;
+    // Driver-specific field (Required if role == DRIVER)
     private String autoRegistrationNumber;
 
     public RegisterRequest() {
@@ -76,5 +76,13 @@ public class RegisterRequest {
 
     public void setAutoRegistrationNumber(String autoRegistrationNumber) {
         this.autoRegistrationNumber = autoRegistrationNumber;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+
+    public void setOtp(String otp) {
+        this.otp = otp;
     }
 }

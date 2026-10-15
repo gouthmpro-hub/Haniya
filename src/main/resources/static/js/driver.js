@@ -146,29 +146,49 @@ function setupEventListeners() {
     }
 }
 
+let lastReportedLat = null;
+let lastReportedLng = null;
+let lastReportedTime = 0;
+let lastReportedAccuracy = 10;
+
 /**
- * Toggles GPS watchPosition on and off.
+ * Calculates distance in meters between two GPS coordinates using Haversine formula.
+ */
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth's radius in meters
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+    const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+              Math.cos(phi1) * Math.cos(phi2) *
+              Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+/**
+ * Toggles GPS watchPosition on and off with power-efficient settings.
  */
 function toggleLocationTracking() {
     const btn = document.getElementById('btnToggleTracking');
     const statusPill = document.getElementById('trackingStatusPill');
 
     if (!isTrackingActive) {
-        // Check browser Geolocation API support
         if (!navigator.geolocation) {
             showToast('Geolocation is not supported by your browser.', 'danger');
             return;
         }
 
         const geoOptions = {
-            enableHighAccuracy: true, // Use hardware GPS if available on phone
-            timeout: 10000,           // 10 second timeout per position fix
-            maximumAge: 0             // Do not use cached location
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 3000 // Reuse recent GPS fixes up to 3s to preserve battery
         };
 
-        showToast('Requesting GPS permission from device...', 'info');
+        showToast('Acquiring high-precision GPS lock...', 'info');
 
-        // Start watching position
         watchId = navigator.geolocation.watchPosition(
             handlePositionSuccess,
             handlePositionError,
@@ -181,12 +201,11 @@ function toggleLocationTracking() {
         btn.classList.add('btn-danger');
 
         if (statusPill) {
-            statusPill.innerHTML = '<span class="pulse-dot"></span> GPS Active & Sharing';
+            statusPill.innerHTML = '<span class="pulse-dot"></span> GPS Active & Sharing (Optimized)';
         }
 
-        showToast('GPS tracking started. Transmitting coordinates to server.', 'success');
+        showToast('Efficient GPS telemetry active. Throttling redundant transmissions.', 'success');
     } else {
-        // Stop watching position
         if (watchId !== null) {
             navigator.geolocation.clearWatch(watchId);
             watchId = null;
@@ -206,17 +225,90 @@ function toggleLocationTracking() {
 }
 
 /**
- * Callback when the browser's Geolocation API successfully resolves coordinates.
+ * Handles high-precision GPS fixes with intelligent movement throttling.
+ * Skips redundant network transmissions if displacement < 2.5m and < 3 seconds elapsed.
  */
 function handlePositionSuccess(position) {
     const lat = position.coords.latitude;
     const lng = position.coords.longitude;
-    const accuracy = position.coords.accuracy;
-    const speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(1) : '0.0';
+    const accuracy = position.coords.accuracy || 10;
+    const now = Date.now();
 
+    let displacement = 999;
+    let timeDeltaSec = (now - lastReportedTime) / 1000;
+
+    if (lastReportedLat !== null && lastReportedLng !== null) {
+        displacement = calculateDistanceMeters(lastReportedLat, lastReportedLng, lat, lng);
+    }
+
+    // Dynamic speed calculation (either native sensor or displacement / dt)
+    let speed = '0.0';
+    if (position.coords.speed !== null && !isNaN(position.coords.speed) && position.coords.speed >= 0) {
+        speed = (position.coords.speed * 3.6).toFixed(1);
+    } else if (lastReportedTime > 0 && timeDeltaSec > 0 && displacement < 200) {
+        speed = Math.min(100, (displacement / timeDeltaSec) * 3.6).toFixed(1);
+    }
+
+    // Update local visual HUD immediately
     updateTelemetryHUD(lat, lng, accuracy, speed);
     updateDriverMapMarker(lat, lng);
+    updateDriverGpsQualityBadge(accuracy);
+
+    // EFFICIENT THROTTLING:
+    // If auto has not moved more than 2.5 meters and less than 3 seconds have passed,
+    // skip network transmission to eliminate battery drain & server congestion.
+    if (displacement < 2.5 && (now - lastReportedTime) < 3000) {
+        return;
+    }
+
+    lastReportedLat = lat;
+    lastReportedLng = lng;
+    lastReportedTime = now;
+    lastReportedAccuracy = accuracy;
+
     sendLocationToBackend(lat, lng, accuracy);
+}
+
+/**
+ * One-click instant precision GPS lock button.
+ */
+function triggerPrecisionGpsLock() {
+    if (!navigator.geolocation) {
+        showToast('Geolocation not supported.', 'danger');
+        return;
+    }
+    showToast('Calibrating hardware GPS precision...', 'info');
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            handlePositionSuccess(pos);
+            if (driverMap) {
+                driverMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+            }
+            showToast(`GPS Calibrated! Precision: ±${Math.round(pos.coords.accuracy)}m`, 'success');
+        },
+        (err) => {
+            handlePositionError(err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+/**
+ * Updates the Driver GPS Quality Indicator Pill.
+ */
+function updateDriverGpsQualityBadge(accuracy) {
+    const badge = document.getElementById('driverGpsQualityBadge');
+    if (!badge) return;
+    if (accuracy <= 10) {
+        badge.className = 'gps-quality-indicator gps-quality-high';
+        badge.innerHTML = `🟢 High Accuracy (±${Math.round(accuracy)}m) • Optimized`;
+    } else if (accuracy <= 25) {
+        badge.className = 'gps-quality-indicator gps-quality-good';
+        badge.innerHTML = `🟡 Good Accuracy (±${Math.round(accuracy)}m)`;
+    } else {
+        badge.className = 'gps-quality-indicator gps-quality-poor';
+        badge.innerHTML = `🟠 Fair / Cell Tower (±${Math.round(accuracy)}m)`;
+    }
 }
 
 /**

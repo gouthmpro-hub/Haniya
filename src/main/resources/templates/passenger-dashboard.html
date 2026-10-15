@@ -49,9 +49,18 @@
                     </button>
                 </div>
 
-                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-glass); border-radius:10px; padding:0.8rem 1rem; margin-bottom:1.2rem; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--text-muted);">Pickup Pin:</span>
-                    <strong id="pickupCoordinates" style="color:var(--accent-amber);">9.9825°, 76.2820°</strong>
+                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-glass); border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.2rem; font-size:0.85rem; display:flex; flex-direction:column; gap:0.4rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-muted);">Pickup Pin:</span>
+                        <strong id="pickupCoordinates" style="color:var(--accent-amber);">9.9825°, 76.2820°</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+                        <span style="color:var(--text-dim);">Landmark:</span>
+                        <span id="pickupAddress" style="color:var(--text-main); font-weight:500; text-align:right; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kochi, Kerala</span>
+                    </div>
+                    <div id="gpsAccuracyBadge" class="gps-quality-indicator gps-quality-high" style="margin-top:0.2rem; align-self:flex-start;">
+                        🟢 High Precision GPS (±8m)
+                    </div>
                 </div>
 
                 <!-- Radius Slider -->

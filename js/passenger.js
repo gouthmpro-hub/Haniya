@@ -92,10 +92,25 @@ function initPassengerMap() {
 
     // Draw visual search radius circle
     drawRadiusCircle();
+
+    // Load fast cached GPS position if available
+    try {
+        const cached = sessionStorage.getItem('autotrack_passenger_cached_loc');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.lat && parsed.lng) {
+                setPassengerLocation(parsed.lat, parsed.lng, true, parsed.accuracy || 12);
+            }
+        }
+    } catch(e) {}
 }
 
+let accuracyCircle = null;
+const geocodeCache = new Map();
+let geocodeDebounceTimer = null;
+
 /**
- * Draws or updates the visual radius circle on the map.
+ * Draws or updates the visual radius circle and GPS accuracy circle on the map.
  */
 function drawRadiusCircle() {
     const radiusMeters = currentRadiusKm * 1000;
@@ -110,6 +125,25 @@ function drawRadiusCircle() {
             fillOpacity: 0.08,
             weight: 1.5,
             dashArray: '5, 5'
+        }).addTo(passengerMap);
+    }
+}
+
+/**
+ * Updates or creates the accuracy ring around the passenger pin.
+ */
+function updateAccuracyRing(lat, lng, accuracyMeters) {
+    if (!passengerMap) return;
+    if (accuracyCircle) {
+        accuracyCircle.setLatLng([lat, lng]);
+        accuracyCircle.setRadius(accuracyMeters);
+    } else {
+        accuracyCircle = L.circle([lat, lng], {
+            radius: accuracyMeters,
+            color: '#06b6d4',
+            fillColor: '#06b6d4',
+            fillOpacity: 0.12,
+            weight: 1
         }).addTo(passengerMap);
     }
 }
@@ -157,7 +191,7 @@ function setupPassengerControls() {
 }
 
 /**
- * Requests the passenger's real smartphone/browser GPS coordinates.
+ * Requests the passenger's real smartphone/browser GPS coordinates with high accuracy.
  */
 function requestPassengerGPS(userInitiated = false) {
     if (!navigator.geolocation) {
@@ -168,8 +202,8 @@ function requestPassengerGPS(userInitiated = false) {
 
     const options = {
         enableHighAccuracy: true,
-        timeout: 8000,
-        maximumAge: 0
+        timeout: 10000,
+        maximumAge: 3000
     };
 
     if (userInitiated) {
@@ -180,8 +214,14 @@ function requestPassengerGPS(userInitiated = false) {
         (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            setPassengerLocation(lat, lng, true);
-            showToast('GPS location acquired!', 'success');
+            const accuracy = position.coords.accuracy || 8;
+
+            try {
+                sessionStorage.setItem('autotrack_passenger_cached_loc', JSON.stringify({ lat, lng, accuracy }));
+            } catch(e) {}
+
+            setPassengerLocation(lat, lng, true, accuracy);
+            showToast(`GPS lock acquired! Precision: ±${Math.round(accuracy)}m`, 'success');
         },
         (error) => {
             console.warn('GPS location error:', error.message);
@@ -195,9 +235,9 @@ function requestPassengerGPS(userInitiated = false) {
 }
 
 /**
- * Updates the passenger's pickup location and re-fetches nearby autos.
+ * Updates the passenger's pickup location, accuracy badge, address, and re-fetches nearby autos.
  */
-function setPassengerLocation(lat, lng, panMap = true) {
+function setPassengerLocation(lat, lng, panMap = true, accuracy = 10) {
     currentPassengerLat = lat;
     currentPassengerLng = lng;
 
@@ -205,6 +245,7 @@ function setPassengerLocation(lat, lng, panMap = true) {
         passengerMarker.setLatLng([lat, lng]);
     }
 
+    updateAccuracyRing(lat, lng, accuracy);
     drawRadiusCircle();
 
     if (panMap && passengerMap) {
@@ -216,7 +257,61 @@ function setPassengerLocation(lat, lng, panMap = true) {
         coordDisplay.textContent = `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
     }
 
+    updateAccuracyBadge(accuracy);
+    reverseGeocodeLocation(lat, lng);
     fetchNearbyAutos();
+}
+
+/**
+ * Dynamically updates the GPS Accuracy Quality Pill.
+ */
+function updateAccuracyBadge(accuracy) {
+    const badge = document.getElementById('gpsAccuracyBadge');
+    if (!badge) return;
+    if (accuracy <= 10) {
+        badge.className = 'gps-quality-indicator gps-quality-high';
+        badge.innerHTML = `🟢 High Precision GPS (±${Math.round(accuracy)}m)`;
+    } else if (accuracy <= 25) {
+        badge.className = 'gps-quality-indicator gps-quality-good';
+        badge.innerHTML = `🟡 Good GPS Accuracy (±${Math.round(accuracy)}m)`;
+    } else {
+        badge.className = 'gps-quality-indicator gps-quality-poor';
+        badge.innerHTML = `🟠 Cellular / Wi-Fi Fix (±${Math.round(accuracy)}m)`;
+    }
+}
+
+/**
+ * Reverse geocodes coordinates to display the exact street/landmark name efficiently.
+ */
+function reverseGeocodeLocation(lat, lng) {
+    const addressEl = document.getElementById('pickupAddress');
+    if (!addressEl) return;
+
+    const cacheKey = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+    if (geocodeCache.has(cacheKey)) {
+        addressEl.textContent = geocodeCache.get(cacheKey);
+        return;
+    }
+
+    clearTimeout(geocodeDebounceTimer);
+    geocodeDebounceTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.address) {
+                    const addr = data.address;
+                    const place = addr.suburb || addr.neighbourhood || addr.road || addr.village || addr.city_district || addr.city || 'Kochi';
+                    const city = addr.city || addr.town || addr.state || 'Kerala';
+                    const fullDesc = `${place}, ${city}`;
+                    geocodeCache.set(cacheKey, fullDesc);
+                    addressEl.textContent = fullDesc;
+                    return;
+                }
+            }
+        } catch(e) {}
+        addressEl.textContent = `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
+    }, 450);
 }
 
 /**

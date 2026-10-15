@@ -100,9 +100,21 @@
 
                 <!-- Telemetry HUD Grid -->
                 <div class="glass-card">
-                    <h3 style="font-size:1.15rem; margin-bottom:1.2rem; display:flex; align-items:center; gap:0.5rem;">
-                        <span>📡</span> Real-Time GPS Telemetry
-                    </h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.9rem;">
+                        <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:0;">
+                            <span>📡</span> Real-Time GPS Telemetry
+                        </h3>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="triggerPrecisionGpsLock()" style="font-size:0.78rem; padding:0.35rem 0.75rem;" title="Calibrate GPS hardware lock">
+                            🎯 Precision Lock
+                        </button>
+                    </div>
+
+                    <div style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+                        <div id="driverGpsQualityBadge" class="gps-quality-indicator gps-quality-high">
+                            🟢 High Accuracy (±8m) • Optimized
+                        </div>
+                        <span style="font-size:0.75rem; color:var(--text-dim);">Engine: 3s / 2.5m rate</span>
+                    </div>
 
                     <div class="telemetry-grid">
                         <div class="telemetry-card">

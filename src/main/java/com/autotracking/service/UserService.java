@@ -46,9 +46,11 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new UsernameNotFoundException("No user found with email: " + email));
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        String clean = identifier.trim().toLowerCase();
+        User user = userRepository.findByPhone(clean)
+                .or(() -> userRepository.findByEmail(clean))
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with phone or email: " + identifier));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
@@ -59,17 +61,33 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User registerUser(RegisterRequest request) {
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
-
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("An account with email " + normalizedEmail + " already exists.");
+        String phone = request.getPhone() != null ? request.getPhone().trim() : "";
+        if (phone.isEmpty()) {
+            throw new IllegalArgumentException("Mobile phone number is required.");
         }
+
+        if (userRepository.existsByPhone(phone)) {
+            throw new IllegalArgumentException("An account with mobile number " + phone + " already exists. Please log in.");
+        }
+
+        String internalEmail = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
+                ? request.getEmail().trim().toLowerCase()
+                : (phone.replaceAll("[^0-9]", "") + "@autotrack.phone");
+
+        if (userRepository.existsByEmail(internalEmail)) {
+            internalEmail = "user_" + System.currentTimeMillis() + "@autotrack.phone";
+        }
+
+        String rawPassword = (request.getPassword() != null && !request.getPassword().trim().isEmpty())
+                ? request.getPassword().trim()
+                : "password123";
 
         // Create base user account
         User user = new User(
                 request.getName().trim(),
-                normalizedEmail,
-                passwordEncoder.encode(request.getPassword()),
+                phone,
+                internalEmail,
+                passwordEncoder.encode(rawPassword),
                 request.getRole()
         );
 
@@ -77,11 +95,8 @@ public class UserService implements UserDetailsService {
 
         // If the registered role is DRIVER, create linked Driver profile
         if (request.getRole() == Role.DRIVER) {
-            if (request.getPhone() == null || request.getPhone().trim().isEmpty()) {
-                throw new IllegalArgumentException("Phone number is required for auto drivers.");
-            }
             if (request.getAutoRegistrationNumber() == null || request.getAutoRegistrationNumber().trim().isEmpty()) {
-                throw new IllegalArgumentException("Auto registration number is required.");
+                throw new IllegalArgumentException("Auto registration number is required for drivers.");
             }
 
             String regNumber = request.getAutoRegistrationNumber().trim().toUpperCase();
@@ -91,7 +106,7 @@ public class UserService implements UserDetailsService {
 
             Driver driver = new Driver(
                     savedUser,
-                    request.getPhone().trim(),
+                    phone,
                     regNumber,
                     true // Set available so driver is immediately ready upon signup
             );
@@ -107,6 +122,19 @@ public class UserService implements UserDetailsService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email.trim().toLowerCase())
+                .orElse(null);
+    }
+
+    public User findByPhone(String phone) {
+        return userRepository.findByPhone(phone.trim())
+                .orElse(null);
+    }
+
+    public User findByIdentifier(String identifier) {
+        if (identifier == null) return null;
+        String clean = identifier.trim().toLowerCase();
+        return userRepository.findByPhone(clean)
+                .or(() -> userRepository.findByEmail(clean))
                 .orElse(null);
     }
 }

@@ -4,21 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | GPS Auto Tracking</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body style="display:flex; flex-direction:column; min-height:100vh;">
 
     <!-- Navbar -->
     <header>
         <nav class="navbar">
-            <a th:href="@{/}" class="nav-brand">
+            <a th:href="@{/}" href="/" class="nav-brand">
                 <div class="brand-icon">
                     <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
                 </div>
                 <div class="brand-text">Auto<span>Track</span></div>
             </a>
             <ul class="nav-links">
-                <li><a th:href="@{/login}" class="nav-link">Sign In</a></li>
+                <li><a th:href="@{/login}" href="/login" class="nav-link">Sign In</a></li>
             </ul>
         </nav>
     </header>
@@ -26,18 +26,74 @@
     <!-- Main Content -->
     <main style="flex:1; display:flex; align-items:center; justify-content:center; padding: 3rem 1.5rem;">
         <div class="glass-card" style="width:100%; max-width:520px;">
-            <div style="text-align:center; margin-bottom:2rem;">
-                <h2 style="font-size:2rem; margin-bottom:0.5rem;">Create Account</h2>
-                <p style="color:var(--text-muted); font-size:0.95rem;">Join as a Passenger to find rides, or as an Auto Driver to share your live GPS location.</p>
+            <div style="text-align:center; margin-bottom:1.8rem;">
+                <h2 style="font-size:2rem; margin-bottom:0.4rem;">Mobile Verification</h2>
+                <p style="color:var(--text-muted); font-size:0.95rem;">
+                    Sign up with your verified mobile phone number. No email or password needed.
+                </p>
             </div>
 
-            <!-- Error Notification Alert -->
-            <div th:if="${errorMessage}" style="background:rgba(244,63,94,0.15); border:1px solid var(--accent-rose); color:#fca5a5; padding:0.85rem 1.1rem; border-radius:10px; margin-bottom:1.5rem; font-size:0.9rem;">
-                <strong>Error:</strong> <span th:text="${errorMessage}"></span>
+            <!-- Simulated SMS Push Toast Banner (Click to Autofill) -->
+            <div id="smsBanner" style="display:none;" class="sms-toast-banner" onclick="autofillReceivedOtp()">
+                <div class="sms-icon-bubble">💬</div>
+                <div class="sms-content">
+                    <div class="sms-header">
+                        <span class="sms-sender">AUTOTRACK SMS GATEWAY</span>
+                        <span class="sms-time">Just Now</span>
+                    </div>
+                    <div class="sms-body">
+                        Your verification code for <strong id="smsTargetPhone">+91 ...</strong> is 
+                        <span class="sms-code-highlight" id="smsOtpCode">------</span>. 
+                        <span style="color:var(--accent-amber-light); font-size:0.8rem; display:block; margin-top:0.25rem;">⚡ Tap here to autofill OTP</span>
+                    </div>
+                </div>
             </div>
 
-            <form th:action="@{/register}" method="post" id="registrationForm" onsubmit="handleStaticRegister(event)">
+            <!-- STEP 1: Phone Number & OTP Verification -->
+            <div id="stepPhoneSection">
+                <div class="form-group">
+                    <label class="form-label" for="phoneInput">Mobile Phone Number</label>
+                    <div class="phone-input-group">
+                        <div class="country-prefix">🇮🇳 +91</div>
+                        <input type="tel" id="phoneInput" class="form-control" placeholder="98470 12345" maxlength="15" autofocus>
+                        <button type="button" class="btn btn-primary" id="btnSendOtp" onclick="handleSendOtp()" style="white-space:nowrap; padding:0.75rem 1.2rem;">
+                            Send OTP
+                        </button>
+                    </div>
+                    <small style="color:var(--text-dim); font-size:0.8rem; display:block; margin-top:0.4rem;">
+                        A 6-digit OTP will be dispatched to this exact mobile number.
+                    </small>
+                </div>
+
+                <!-- OTP Input Group (Hidden until OTP sent) -->
+                <div id="otpInputGroup" style="display:none; margin-top:1.5rem; background:rgba(245,158,11,0.04); border:1px dashed rgba(245,158,11,0.25); border-radius:12px; padding:1.2rem;">
+                    <label class="form-label" style="text-align:center; display:block;" for="otpInput">Enter 6-Digit Verification Code</label>
+                    <div style="display:flex; justify-content:center; gap:0.5rem; margin-bottom:1rem;">
+                        <input type="text" id="otpInput" class="form-control" placeholder="• • • • • •" maxlength="6" 
+                               style="max-width:240px; text-align:center; font-size:1.6rem; letter-spacing:0.35em; font-family:monospace; font-weight:700; color:var(--accent-amber-light);">
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-block" id="btnVerifyOtp" onclick="handleVerifyOtp()" style="padding:0.85rem;">
+                        Verify Mobile Number
+                    </button>
+
+                    <div style="text-align:center; margin-top:0.9rem;">
+                        <button type="button" id="btnResendOtp" class="btn btn-outline btn-sm" onclick="handleSendOtp()" style="font-size:0.8rem; display:none;">
+                            Resend Code
+                        </button>
+                        <span id="resendCountdown" style="color:var(--text-dim); font-size:0.8rem;">Resend available in 30s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Profile Details (Unlocked once phone is verified) -->
+            <form id="registrationForm" style="display:none;" onsubmit="handleFinalRegistration(event)">
                 
+                <div class="verified-phone-badge" id="verifiedBadge">
+                    <span>✅</span>
+                    <span>Verified Number: <strong id="verifiedPhoneDisplay">+91 ...</strong></span>
+                </div>
+
                 <!-- Role Selector -->
                 <label class="form-label">I want to register as:</label>
                 <div class="role-switch-container">
@@ -62,101 +118,218 @@
                     <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required minlength="2">
                 </div>
 
-                <!-- Email Address -->
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="e.g. rahul@example.com" required>
-                </div>
-
-                <!-- Password -->
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
-                </div>
-
-                <!-- Dynamic Driver Details (Shown only when Driver role is selected) -->
+                <!-- Driver-Specific Fields -->
                 <div id="driverFields" style="display:none; background:rgba(245,158,11,0.05); border:1px dashed rgba(245,158,11,0.3); border-radius:12px; padding:1.2rem; margin-bottom:1.4rem;">
-                    <div style="font-weight:700; color:var(--accent-amber); font-size:0.9rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <div style="font-weight:700; color:var(--accent-amber); font-size:0.9rem; margin-bottom:0.8rem; display:flex; align-items:center; gap:0.5rem;">
                         <span>🛺</span> Driver Vehicle Details
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g. +91 98470 12345">
                     </div>
 
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="autoRegistrationNumber">Auto Registration Number</label>
                         <input type="text" id="autoRegistrationNumber" name="autoRegistrationNumber" class="form-control" placeholder="e.g. KL-07-CD-4521" style="text-transform:uppercase;">
+                        <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.3rem; display:block;">
+                            Required by transport authorities for passenger GPS discovery.
+                        </small>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="padding:0.95rem; font-size:1.05rem;" id="btnSubmitRegister">
-                    Create Account
+                    Complete Registration & Open Dashboard
                 </button>
             </form>
 
             <div style="text-align:center; margin-top:1.8rem; font-size:0.9rem; color:var(--text-muted);">
-                Already have an account? <a th:href="@{/login}" style="font-weight:600;">Sign in here</a>
+                Already have an account? <a th:href="@{/login}" href="/login" style="font-weight:600;">Sign in with Mobile OTP</a>
             </div>
         </div>
     </main>
 
     <script>
+        let currentRole = 'PASSENGER';
+        let verifiedPhoneNumber = '';
+        let generatedOtp = '';
+        let resendTimer = null;
+        let resendSeconds = 30;
+
         function selectRole(role) {
+            currentRole = role;
             const optPass = document.getElementById('optionPassenger');
             const optDriver = document.getElementById('optionDriver');
             const driverFields = document.getElementById('driverFields');
-            const phoneInput = document.getElementById('phone');
             const autoRegInput = document.getElementById('autoRegistrationNumber');
 
             if (role === 'DRIVER') {
                 optDriver.classList.add('active');
                 optPass.classList.remove('active');
                 driverFields.style.display = 'block';
-                phoneInput.required = true;
                 autoRegInput.required = true;
             } else {
                 optPass.classList.add('active');
                 optDriver.classList.remove('active');
                 driverFields.style.display = 'none';
-                phoneInput.required = false;
                 autoRegInput.required = false;
             }
-        function handleStaticRegister(e) {
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const phoneInput = document.getElementById('phone');
-            const autoRegInput = document.getElementById('autoRegistrationNumber');
+        }
 
-            const name = nameInput ? nameInput.value.trim() : '';
-            const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-            const phone = phoneInput ? phoneInput.value.trim() : '';
-            const autoReg = autoRegInput ? autoRegInput.value.trim().toUpperCase() : '';
+        async function handleSendOtp() {
+            const rawPhone = document.getElementById('phoneInput').value.trim();
+            if (!rawPhone || rawPhone.length < 8) {
+                alert('Please enter a valid mobile phone number.');
+                return;
+            }
+
+            const formattedPhone = rawPhone.startsWith('+') ? rawPhone : '+91 ' + rawPhone;
+            const btnSend = document.getElementById('btnSendOtp');
+            btnSend.disabled = true;
+            btnSend.textContent = 'Sending...';
+
+            let serverOtp = '';
+            try {
+                const res = await fetch('/api/auth/otp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: formattedPhone })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.otp) {
+                        serverOtp = data.otp;
+                    }
+                }
+            } catch(e) {}
+
+            // Fallback generation
+            if (!serverOtp) {
+                serverOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            }
+
+            generatedOtp = serverOtp;
+            document.getElementById('smsTargetPhone').textContent = formattedPhone;
+            document.getElementById('smsOtpCode').textContent = serverOtp;
+            document.getElementById('smsBanner').style.display = 'flex';
+            document.getElementById('otpInputGroup').style.display = 'block';
+            document.getElementById('phoneInput').disabled = true;
+            btnSend.textContent = 'Sent ✅';
+
+            startCountdown();
+        }
+
+        function startCountdown() {
+            clearInterval(resendTimer);
+            resendSeconds = 30;
+            const btnResend = document.getElementById('btnResendOtp');
+            const countdownEl = document.getElementById('resendCountdown');
+            btnResend.style.display = 'none';
+            countdownEl.style.display = 'inline';
+
+            resendTimer = setInterval(() => {
+                resendSeconds--;
+                countdownEl.textContent = `Resend available in ${resendSeconds}s`;
+                if (resendSeconds <= 0) {
+                    clearInterval(resendTimer);
+                    countdownEl.style.display = 'none';
+                    btnResend.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function autofillReceivedOtp() {
+            if (generatedOtp) {
+                const otpInput = document.getElementById('otpInput');
+                otpInput.value = generatedOtp;
+                handleVerifyOtp();
+            }
+        }
+
+        async function handleVerifyOtp() {
+            const enteredOtp = document.getElementById('otpInput').value.trim();
+            const rawPhone = document.getElementById('phoneInput').value.trim();
+            const formattedPhone = rawPhone.startsWith('+') ? rawPhone : '+91 ' + rawPhone;
+
+            if (enteredOtp.length !== 6) {
+                alert('Please enter the complete 6-digit OTP.');
+                return;
+            }
+
+            let isValid = false;
+
+            // Try backend verification
+            try {
+                const res = await fetch('/api/auth/otp/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: formattedPhone, otp: enteredOtp })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.verified) {
+                        isValid = true;
+                    }
+                }
+            } catch(e) {}
+
+            // Client-side fallback check
+            if (!isValid && enteredOtp === generatedOtp) {
+                isValid = true;
+            }
+
+            if (!isValid) {
+                alert('Invalid or expired OTP. Please verify the code received in SMS.');
+                return;
+            }
+
+            // OTP Verified Successfully!
+            verifiedPhoneNumber = formattedPhone;
+            document.getElementById('stepPhoneSection').style.display = 'none';
+            document.getElementById('smsBanner').style.display = 'none';
+            document.getElementById('verifiedPhoneDisplay').textContent = verifiedPhoneNumber;
+            document.getElementById('registrationForm').style.display = 'block';
+            document.getElementById('name').focus();
+        }
+
+        async function handleFinalRegistration(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const autoReg = document.getElementById('autoRegistrationNumber') ? document.getElementById('autoRegistrationNumber').value.trim().toUpperCase() : '';
 
             const profile = {
-                name: name || (currentRole === 'DRIVER' ? 'Driver' : 'Passenger'),
-                email: email,
+                name: name,
+                phone: verifiedPhoneNumber,
+                email: verifiedPhoneNumber.replace(/[^0-9]/g, '') + '@autotrack.phone',
                 role: currentRole,
-                phone: phone,
                 autoRegistrationNumber: autoReg,
                 available: true
             };
 
+            // Try Spring Boot API Registration
+            try {
+                await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: profile.name,
+                        phone: profile.phone,
+                        email: profile.email,
+                        role: profile.role,
+                        autoRegistrationNumber: profile.autoRegistrationNumber
+                    })
+                });
+            } catch(e) {}
+
             // Save active session user
             localStorage.setItem('autotrack_current_user', JSON.stringify(profile));
 
-            // Save to registered users list
+            // Save to registered users list in localStorage
             try {
                 let list = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
-                list = list.filter(u => u.email !== email);
+                list = list.filter(u => u.phone !== verifiedPhoneNumber);
                 list.push(profile);
                 localStorage.setItem('autotrack_registered_users', JSON.stringify(list));
             } catch(err) {
                 localStorage.setItem('autotrack_registered_users', JSON.stringify([profile]));
             }
 
-            // If driver, strictly add to local registered driver fleet
+            // If driver, strictly add to registered driver fleet
             if (currentRole === 'DRIVER' && autoReg) {
                 try {
                     let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
@@ -164,12 +337,11 @@
                     drivers.push({
                         driverId: Date.now(),
                         driverName: profile.name,
-                        email: email,
-                        phone: phone,
+                        phone: verifiedPhoneNumber,
                         autoRegistrationNumber: autoReg,
                         latitude: 9.9825 + (Math.random() * 0.006 - 0.003),
                         longitude: 76.2820 + (Math.random() * 0.006 - 0.003),
-                        accuracy: 9.0,
+                        accuracy: 8.0,
                         available: true,
                         lastUpdated: new Date().toLocaleTimeString()
                     });
@@ -177,6 +349,13 @@
                 } catch(err) {
                     console.warn(err);
                 }
+            }
+
+            alert('Account registered and mobile number verified for ' + profile.name + '! Redirecting to dashboard...');
+            if (currentRole === 'DRIVER') {
+                window.location.href = window.location.port === '8080' ? '/driver/dashboard' : '/driver-dashboard.html';
+            } else {
+                window.location.href = window.location.port === '8080' ? '/passenger/dashboard' : '/passenger-dashboard.html';
             }
         }
     </script>

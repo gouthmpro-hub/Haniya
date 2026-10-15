@@ -20,6 +20,9 @@ public class User {
     @Column(nullable = false, unique = true, length = 120)
     private String email;
 
+    @Column(length = 30)
+    private String phone;
+
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
@@ -36,6 +39,16 @@ public class User {
     public User(String name, String email, String passwordHash, Role role) {
         this.name = name;
         this.email = email;
+        this.passwordHash = passwordHash;
+        this.role = role;
+    }
+
+    public User(String name, String phone, String email, String passwordHash, Role role) {
+        this.name = name;
+        this.phone = phone;
+        this.email = (email != null && !email.trim().isEmpty()) 
+                ? email.trim().toLowerCase() 
+                : (phone != null ? phone.replaceAll("[^0-9]", "") + "@autotrack.phone" : "user@autotrack.phone");
         this.passwordHash = passwordHash;
         this.role = role;
     }
@@ -67,6 +80,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getPasswordHash() {
