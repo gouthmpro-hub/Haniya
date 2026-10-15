@@ -457,11 +457,11 @@ a:hover {
 .dashboard-sidebar {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-glass);
-  padding: 1.8rem;
+  padding: 1.1rem 1.25rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   z-index: 10;
 }
 

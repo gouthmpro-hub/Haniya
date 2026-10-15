@@ -42,43 +42,40 @@
         <aside class="dashboard-sidebar">
             
             <!-- Location & Radar Panel -->
-            <div class="glass-card" style="padding: 1.4rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                    <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
-                        <span>📍</span> Pickup Location
+            <div class="glass-card" style="padding: 1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <h3 style="font-size:1.05rem; display:flex; align-items:center; gap:0.4rem; margin:0;">
+                        <span>📍</span> Pickup Point
                     </h3>
-                    <button id="btnLocateMe" class="btn btn-primary btn-sm" title="Pinpoint and center on my current location" style="display:flex; align-items:center; gap:0.35rem; font-weight:600;">
-                        🎯 Show My Location
+                    <button id="btnLocateMe" class="btn btn-primary btn-sm" title="Pinpoint and center on my current location" style="display:flex; align-items:center; gap:0.35rem; font-weight:600; padding:0.35rem 0.75rem; font-size:0.8rem;">
+                        🎯 My Location
                     </button>
                 </div>
 
-                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-glass); border-radius:10px; padding:0.85rem 1rem; margin-bottom:1.2rem; font-size:0.85rem; display:flex; flex-direction:column; gap:0.4rem;">
+                <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-glass); border-radius:8px; padding:0.65rem 0.85rem; margin-bottom:0.85rem; font-size:0.82rem; display:flex; flex-direction:column; gap:0.3rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:var(--text-muted);">Pickup Pin:</span>
+                        <span style="color:var(--text-muted);">Coordinates:</span>
                         <strong id="pickupCoordinates" style="color:var(--accent-amber);">9.9825°, 76.2820°</strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="color:var(--text-dim);">Landmark:</span>
-                        <span id="pickupAddress" style="color:var(--text-main); font-weight:500; text-align:right; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kochi, Kerala</span>
+                        <span id="pickupAddress" style="color:var(--text-main); font-weight:500; text-align:right; max-width:210px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Kochi, Kerala</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem; margin-top:0.2rem;">
-                        <div id="gpsAccuracyBadge" class="gps-quality-indicator gps-quality-high">
-                            🟢 High Precision GPS (±8m)
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.2rem;">
+                        <div id="gpsAccuracyBadge" class="gps-quality-indicator gps-quality-high" style="font-size:0.72rem; padding:0.15rem 0.5rem;">
+                            🟢 High Precision (±8m)
                         </div>
-                    </div>
-                    <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem; border-top:1px dashed var(--border-glass); padding-top:0.4rem;">
-                        🔒 Location pin locked to your device. Press <strong>"Show My Location"</strong> to update GPS.
                     </div>
                 </div>
 
                 <!-- Radius Slider -->
-                <div style="margin-bottom: 1rem;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.4rem;">
+                <div style="margin-bottom: 0.85rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
                         <span style="color:var(--text-muted); font-weight:500;">Search Radius:</span>
                         <strong id="radiusValue" style="color:var(--accent-amber);">15.0 km</strong>
                     </div>
                     <input type="range" id="radiusSlider" min="1" max="25" step="0.5" value="15.0" style="width:100%; accent-color:var(--accent-amber); cursor:pointer;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-dim); margin-top:2px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-top:2px;">
                         <span>1 km</span>
                         <span>5 km</span>
                         <span>15 km</span>
@@ -88,10 +85,10 @@
 
                 <!-- Destination Search -->
                 <div>
-                    <label class="form-label" for="destinationInput" style="font-size:0.82rem;">Destination (Optional)</label>
-                    <div style="display:flex; gap:0.5rem;">
-                        <input type="text" id="destinationInput" class="form-control" placeholder="Search landmark or station..." style="padding:0.6rem 0.9rem; font-size:0.88rem;">
-                        <button id="btnSearchDest" class="btn btn-outline btn-sm" style="padding:0.6rem 0.9rem;">
+                    <label class="form-label" for="destinationInput" style="font-size:0.78rem; margin-bottom:0.25rem;">Destination (Optional)</label>
+                    <div style="display:flex; gap:0.4rem;">
+                        <input type="text" id="destinationInput" class="form-control" placeholder="Search landmark..." style="padding:0.45rem 0.75rem; font-size:0.84rem;">
+                        <button id="btnSearchDest" class="btn btn-outline btn-sm" style="padding:0.45rem 0.8rem; font-size:0.84rem;">
                             Go
                         </button>
                     </div>

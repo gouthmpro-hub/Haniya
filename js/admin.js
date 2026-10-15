@@ -146,12 +146,18 @@ function renderDriversTable(drivers) {
                     <div style="font-size:0.75rem; color:var(--text-dim); margin-top:2px;">Last ping: ${escapeHtml(d.lastUpdated || 'Recent')}</div>
                 </td>
                 <td style="padding:1.1rem 1rem; text-align:right;">
-                    <div style="display:inline-flex; gap:0.5rem; align-items:center;">
+                    <div style="display:inline-flex; gap:0.4rem; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                        <a href="/driver-share.html?name=${encodeURIComponent(d.name)}&phone=${encodeURIComponent(d.phone || '')}&auto=${encodeURIComponent(d.autoRegistrationNumber || '')}" target="_blank" class="btn btn-sm" style="background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.4); color:#34d399; text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;" title="Open real-time smartphone GPS broadcaster for ${escapeHtml(d.name)}">
+                            📡 Live GPS
+                        </a>
+                        <button type="button" class="btn btn-sm" onclick="setDriverToMyCurrentGps(${d.id}, '${escapeHtml(d.name)}', '${escapeHtml(d.phone || '')}', '${escapeHtml(d.autoRegistrationNumber)}')" style="background:rgba(59,130,246,0.18); border:1px solid rgba(59,130,246,0.4); color:#93c5fd;" title="Instantly update ${escapeHtml(d.name)} to this device's current GPS">
+                            🎯 Set to My GPS
+                        </button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="toggleDriver(${d.id})" title="Toggle Available / Busy">
                             ${d.available ? 'Set Busy' : 'Set Available'}
                         </button>
                         <button type="button" class="btn btn-sm" onclick="confirmDeleteDriver(${d.id}, '${escapeHtml(d.name)}', '${escapeHtml(d.autoRegistrationNumber)}')" style="background:rgba(239,68,68,0.2); border:1px solid rgba(239,68,68,0.4); color:#fca5a5;" title="Permanently remove driver">
-                            🗑️ Remove
+                            🗑️
                         </button>
                     </div>
                 </td>
@@ -568,3 +574,121 @@ async function submitManualDriver(e) {
     showToast(`Driver ${name} (${autoRegistrationNumber}) registered successfully at (${payload.latitude}, ${payload.longitude})!`, 'success');
     await loadFleetData();
 }
+
+/**
+ * Instantly updates a driver's exact location to the browser's current real hardware GPS.
+ */
+function setDriverToMyCurrentGps(id, name, phone, auto) {
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser.', 'danger');
+        return;
+    }
+
+    showToast(`📍 Pinpointing your current GPS coordinates for ${name}...`, 'info');
+
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy || 5;
+
+            const payload = {
+                driverId: id,
+                name: name,
+                phone: phone,
+                autoRegistrationNumber: auto,
+                latitude: lat,
+                longitude: lng,
+                accuracy: accuracy
+            };
+
+            // 1. Post to backend REST API
+            try {
+                await fetch('/api/admin/drivers/update-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch(e) {}
+
+            // 2. Sync localStorage for immediate offline/hybrid parity
+            try {
+                let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+                let found = drivers.find(d => d.id === id || (d.name && d.name.toLowerCase() === name.toLowerCase()));
+                if (found) {
+                    found.latitude = lat;
+                    found.longitude = lng;
+                    found.accuracy = accuracy;
+                    found.available = true;
+                    found.lastUpdated = new Date().toLocaleTimeString();
+                    found.activeGps = true;
+                }
+                localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+            } catch(e) {}
+
+            await loadFleetData();
+            showToast(`✅ ${name}'s location updated to your exact GPS: ${lat.toFixed(4)}°, ${lng.toFixed(4)}°!`, 'success');
+        },
+        (err) => {
+            showToast('GPS Error: ' + err.message, 'danger');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+/**
+ * 1-Click quick registration for driver Haniya with phone and auto plate.
+ */
+async function quickAddDriverHaniya() {
+    const payload = {
+        name: 'Haniya',
+        email: '919847188888@autotrack.driver',
+        phone: '+91 98471 88888',
+        autoRegistrationNumber: 'KL-07-HN-7777',
+        password: 'password123',
+        available: true,
+        latitude: 9.9880,
+        longitude: 76.2760
+    };
+
+    showToast('Registering driver Haniya...', 'info');
+
+    const isStaticHost = window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname.includes('github.io') || 
+                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+
+    if (!isStaticHost) {
+        try {
+            await fetch('/api/admin/drivers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch(e) {}
+    }
+
+    try {
+        let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
+        drivers = drivers.filter(d => !d.name || !d.name.toLowerCase().includes('haniya'));
+        drivers.push({
+            id: Date.now(),
+            driverId: Date.now(),
+            name: 'Haniya',
+            driverName: 'Haniya',
+            email: payload.email,
+            phone: payload.phone,
+            autoRegistrationNumber: payload.autoRegistrationNumber,
+            available: true,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            accuracy: 5.0,
+            lastUpdated: new Date().toLocaleTimeString(),
+            activeGps: true
+        });
+        localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
+    } catch(e) {}
+
+    await loadFleetData();
+    showToast('👩‍✈️ Driver Haniya registered successfully!', 'success');
+}
+

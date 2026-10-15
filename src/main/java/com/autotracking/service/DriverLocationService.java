@@ -106,8 +106,12 @@ public class DriverLocationService {
                             loc.getLatitude(), loc.getLongitude()
                     );
                     int eta = distanceService.calculateEtaMinutes(distance);
-                    long secondsAgo = Duration.between(loc.getLastUpdated(), now).getSeconds();
-                    String timeFormatted = loc.getLastUpdated().format(timeFormatter);
+                    long secondsAgo = (loc.getLastUpdated() != null)
+                            ? Duration.between(loc.getLastUpdated(), now).getSeconds()
+                            : 0;
+                    String timeFormatted = (loc.getLastUpdated() != null)
+                            ? loc.getLastUpdated().format(timeFormatter)
+                            : "Recent";
 
                     return new NearbyDriverDTO(
                             driver.getId(),
@@ -127,5 +131,107 @@ public class DriverLocationService {
                 .filter(dto -> dto.getDistanceKm() <= effectiveRadius)
                 .sorted(Comparator.comparingDouble(NearbyDriverDTO::getDistanceKm))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Updates or creates the live location for a driver identified by driverId, phone, name, or autoRegistrationNumber.
+     * Guarantees that drivers like Haniya have their live GPS broadcasted immediately to passengers.
+     */
+    @Transactional
+    public DriverLocation updateLiveLocation(com.autotracking.dto.LiveLocationShareRequest request) {
+        Driver targetDriver = null;
+
+        // 1. Match by driverId
+        if (request.getDriverId() != null) {
+            targetDriver = driverRepository.findById(request.getDriverId()).orElse(null);
+        }
+
+        // 2. Match by phone
+        if (targetDriver == null && request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            String cleanPhone = request.getPhone().replaceAll("[^0-9]", "");
+            List<Driver> all = driverRepository.findAll();
+            for (Driver d : all) {
+                if (d.getPhone() != null && d.getPhone().replaceAll("[^0-9]", "").contains(cleanPhone)) {
+                    targetDriver = d;
+                    break;
+                }
+            }
+        }
+
+        // 3. Match by name (e.g., "Haniya")
+        if (targetDriver == null && request.getName() != null && !request.getName().trim().isEmpty()) {
+            String nameLower = request.getName().trim().toLowerCase();
+            List<Driver> all = driverRepository.findAll();
+            for (Driver d : all) {
+                if (d.getUser() != null && d.getUser().getName() != null &&
+                    d.getUser().getName().toLowerCase().contains(nameLower)) {
+                    targetDriver = d;
+                    break;
+                }
+            }
+        }
+
+        // 4. Match by autoRegistrationNumber
+        if (targetDriver == null && request.getAutoRegistrationNumber() != null && !request.getAutoRegistrationNumber().trim().isEmpty()) {
+            targetDriver = driverRepository.findByAutoRegistrationNumber(request.getAutoRegistrationNumber().trim().toUpperCase()).orElse(null);
+        }
+
+        // 5. If driver still not found, auto-create the driver (e.g. Haniya)
+        if (targetDriver == null) {
+            String driverName = (request.getName() != null && !request.getName().trim().isEmpty()) ? request.getName().trim() : "Haniya";
+            String driverPhone = (request.getPhone() != null && !request.getPhone().trim().isEmpty()) ? request.getPhone().trim() : "+91 98471 88888";
+            String regNumber = (request.getAutoRegistrationNumber() != null && !request.getAutoRegistrationNumber().trim().isEmpty())
+                    ? request.getAutoRegistrationNumber().trim().toUpperCase()
+                    : ("KL-07-HN-" + ((int)(Math.random() * 9000) + 1000));
+
+            com.autotracking.dto.ManualDriverRequest createReq = new com.autotracking.dto.ManualDriverRequest(
+                    driverName,
+                    driverPhone.replaceAll("[^0-9]", "") + "@autotrack.driver",
+                    driverPhone,
+                    regNumber,
+                    "password123",
+                    true,
+                    request.getLatitude(),
+                    request.getLongitude()
+            );
+            com.autotracking.dto.DriverManagementDTO created = driverService.addManualDriver(createReq);
+            targetDriver = driverRepository.findById(created.getId()).orElse(null);
+        }
+
+        if (targetDriver == null) {
+            throw new IllegalStateException("Failed to locate or register driver for live GPS broadcast");
+        }
+
+        // Ensure driver is marked available
+        targetDriver.setAvailable(true);
+        driverRepository.save(targetDriver);
+
+        final Driver finalDriver = targetDriver;
+
+        // Update location record
+        DriverLocation location = locationRepository.findByDriver(finalDriver)
+                .orElseGet(() -> new DriverLocation(finalDriver, request.getLatitude(), request.getLongitude(), request.getAccuracy()));
+
+        location.setLatitude(request.getLatitude());
+        location.setLongitude(request.getLongitude());
+        location.setAccuracy(request.getAccuracy() != null ? request.getAccuracy() : 5.0);
+        location.setLastUpdated(LocalDateTime.now());
+
+        DriverLocation savedLocation = locationRepository.save(location);
+
+        // Broadcast real-time location to all listening passengers via STOMP WebSocket
+        DriverLocationBroadcastDTO broadcast = new DriverLocationBroadcastDTO(
+                targetDriver.getId(),
+                targetDriver.getUser().getName(),
+                targetDriver.getAutoRegistrationNumber(),
+                savedLocation.getLatitude(),
+                savedLocation.getLongitude(),
+                savedLocation.getAccuracy(),
+                targetDriver.isAvailable(),
+                "LOCATION_UPDATE"
+        );
+        messagingTemplate.convertAndSend("/topic/driver-updates", broadcast);
+
+        return savedLocation;
     }
 }

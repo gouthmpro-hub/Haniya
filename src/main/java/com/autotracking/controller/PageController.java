@@ -60,10 +60,9 @@ public class PageController {
         return "passenger-dashboard";
     }
 
-    @GetMapping({"/driver/dashboard", "/driver-dashboard", "/driver-dashboard.html", "/driver/**"})
-    public String driverDashboard() {
-        // Driver portal removed for end users; redirect to passenger tracking dashboard
-        return "redirect:/passenger/dashboard";
+    @GetMapping({"/driver-share", "/driver-share.html", "/driver/share", "/driver/share/index.html", "/driver/dashboard", "/driver-dashboard", "/driver-dashboard.html"})
+    public String driverSharePage() {
+        return "driver-share";
     }
 
     @GetMapping({"/admin/drivers", "/admin-dashboard.html", "/admin"})

@@ -38,10 +38,16 @@
                     Monitor all registered drivers in the dispatch network, track live availability, and manage or remove drivers.
                 </p>
             </div>
-            <div style="display:flex; gap:0.8rem; align-items:center; flex-wrap:wrap;">
+            <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
                 <button type="button" class="btn btn-outline btn-sm" onclick="loadFleetData()">
                     🔄 Refresh Data
                 </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="quickAddDriverHaniya()" style="color:#f472b6; border-color:rgba(244,114,182,0.4); font-weight:600;">
+                    👩‍✈️ + Add Driver Haniya
+                </button>
+                <a th:href="@{/driver-share.html(name='Haniya')}" href="/driver-share.html?name=Haniya" target="_blank" class="btn btn-outline btn-sm" style="color:#34d399; border-color:rgba(16,185,129,0.4); font-weight:600; text-decoration:none;">
+                    📡 Open Haniya Live GPS
+                </a>
                 <button type="button" class="btn btn-outline btn-sm" onclick="quickAdd3Drivers()" style="color:var(--accent-emerald); border-color:rgba(16,185,129,0.3); font-weight:600;">
                     ⚡ Quick-Add 3 Test Drivers
                 </button>

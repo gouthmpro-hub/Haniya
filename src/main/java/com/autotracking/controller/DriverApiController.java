@@ -47,6 +47,26 @@ public class DriverApiController {
     }
 
     /**
+     * Public endpoint for drivers (like Haniya) to broadcast real-time GPS telemetry from mobile device.
+     */
+    @PostMapping("/live-location")
+    public ResponseEntity<?> broadcastLiveLocation(@Valid @RequestBody com.autotracking.dto.LiveLocationShareRequest request) {
+        DriverLocation savedLocation = locationService.updateLiveLocation(request);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Live GPS broadcasted successfully",
+                "driverName", savedLocation.getDriver().getUser().getName(),
+                "phone", savedLocation.getDriver().getPhone(),
+                "autoRegistrationNumber", savedLocation.getDriver().getAutoRegistrationNumber(),
+                "latitude", savedLocation.getLatitude(),
+                "longitude", savedLocation.getLongitude(),
+                "accuracy", savedLocation.getAccuracy(),
+                "lastUpdated", savedLocation.getLastUpdated().format(DateTimeFormatter.ofPattern("hh:mm:ss a"))
+        ));
+    }
+
+    /**
      * Endpoint for drivers to toggle their availability (available or busy).
      */
     @PostMapping("/availability")

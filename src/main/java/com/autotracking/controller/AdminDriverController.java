@@ -15,9 +15,11 @@ import java.util.Map;
 public class AdminDriverController {
 
     private final DriverService driverService;
+    private final com.autotracking.service.DriverLocationService locationService;
 
-    public AdminDriverController(DriverService driverService) {
+    public AdminDriverController(DriverService driverService, com.autotracking.service.DriverLocationService locationService) {
         this.driverService = driverService;
+        this.locationService = locationService;
     }
 
     /**
@@ -83,6 +85,33 @@ public class AdminDriverController {
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Failed to add driver: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Endpoint to quickly update driver location from Admin Fleet Console or direct GPS sync.
+     */
+    @PostMapping("/update-location")
+    public ResponseEntity<?> updateDriverLocationDirect(@jakarta.validation.Valid @RequestBody com.autotracking.dto.LiveLocationShareRequest request) {
+        try {
+            com.autotracking.model.DriverLocation savedLoc = locationService.updateLiveLocation(request);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Driver location updated successfully",
+                    "driverId", savedLoc.getDriver().getId(),
+                    "driverName", savedLoc.getDriver().getUser().getName(),
+                    "phone", savedLoc.getDriver().getPhone(),
+                    "autoRegistrationNumber", savedLoc.getDriver().getAutoRegistrationNumber(),
+                    "latitude", savedLoc.getLatitude(),
+                    "longitude", savedLoc.getLongitude(),
+                    "accuracy", savedLoc.getAccuracy(),
+                    "lastUpdated", savedLoc.getLastUpdated().format(java.time.format.DateTimeFormatter.ofPattern("hh:mm:ss a"))
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update driver location: " + e.getMessage()
             ));
         }
     }
