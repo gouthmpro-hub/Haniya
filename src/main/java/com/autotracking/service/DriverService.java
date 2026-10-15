@@ -219,9 +219,13 @@ public class DriverService {
      */
     @Transactional
     public DriverManagementDTO addManualDriver(com.autotracking.dto.ManualDriverRequest request) {
-        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        String phone = request.getPhone() != null ? request.getPhone().trim() : "";
+        String normalizedEmail = (request.getEmail() != null && !request.getEmail().trim().isEmpty())
+                ? request.getEmail().trim().toLowerCase()
+                : (phone.replaceAll("[^0-9]", "") + "@autotrack.driver");
+
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("User with email " + normalizedEmail + " already exists.");
+            normalizedEmail = "driver_" + System.currentTimeMillis() + "@autotrack.driver";
         }
 
         String regNumber = request.getAutoRegistrationNumber().trim().toUpperCase();
@@ -233,9 +237,10 @@ public class DriverService {
                 ? request.getPassword().trim()
                 : "password123";
 
-        // 1. Create User with encrypted BCrypt password
+        // 1. Create User with phone and encrypted BCrypt password
         User user = new User(
                 request.getName().trim(),
+                phone,
                 normalizedEmail,
                 passwordEncoder.encode(rawPassword),
                 com.autotracking.model.Role.DRIVER

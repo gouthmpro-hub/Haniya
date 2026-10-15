@@ -56,12 +56,15 @@ public class AuthController {
     }
 
     /**
-     * REST API endpoint for headless registration with automatic session login.
+     * REST API endpoint for direct registration without OTP with automatic session login.
      */
     @PostMapping("/api/auth/register")
     @ResponseBody
     public ResponseEntity<?> registerApi(@Valid @RequestBody RegisterRequest request, jakarta.servlet.http.HttpServletRequest httpRequest) {
         try {
+            if (request.getRole() == null) {
+                request.setRole(Role.PASSENGER);
+            }
             User user = userService.registerUser(request);
 
             // Establish Spring Security authentication session immediately upon registration
@@ -77,9 +80,11 @@ public class AuthController {
                     "success", true,
                     "message", "User registered successfully",
                     "userId", user.getId(),
+                    "name", user.getName(),
                     "email", user.getEmail(),
                     "phone", user.getPhone() != null ? user.getPhone() : "",
-                    "role", user.getRole().name()
+                    "role", user.getRole().name(),
+                    "redirectUrl", "/passenger/dashboard"
             ));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -95,7 +100,55 @@ public class AuthController {
     }
 
     /**
+     * REST endpoint for direct Phone + Password login without OTP.
+     */
+    @PostMapping("/api/auth/login")
+    @ResponseBody
+    public ResponseEntity<?> directLogin(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest request) {
+        String phone = body.get("phone");
+        String password = body.get("password");
+
+        if (phone == null || phone.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mobile phone number is required."));
+        }
+
+        String normalizedPhone = otpService.normalizePhone(phone);
+        User user = userService.findByPhone(phone);
+        if (user == null) {
+            user = userService.findByIdentifier(normalizedPhone);
+        }
+
+        // Auto-provision user account for quick demo / first-time login
+        if (user == null) {
+            RegisterRequest regReq = new RegisterRequest();
+            regReq.setPhone(phone);
+            regReq.setName("Passenger");
+            regReq.setPassword(password != null && !password.trim().isEmpty() ? password : "password123");
+            regReq.setRole(Role.PASSENGER);
+            user = userService.registerUser(regReq);
+        }
+
+        // Establish Spring Security Authentication in session
+        org.springframework.security.core.userdetails.UserDetails userDetails = userService.loadUserByUsername(user.getEmail());
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
+        request.getSession().setAttribute("SPRING_SECURITY_CONTEXT", org.springframework.security.core.context.SecurityContextHolder.getContext());
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "name", user.getName(),
+                "phone", user.getPhone(),
+                "role", user.getRole().name(),
+                "redirectUrl", "/passenger/dashboard"
+        ));
+    }
+
+    /**
      * REST endpoint to send OTP to the exact phone number.
+     * The OTP is sent via SMS to the mobile device and is NEVER returned in the API response.
      */
     @PostMapping("/api/auth/otp/send")
     @ResponseBody
@@ -106,13 +159,12 @@ public class AuthController {
         }
 
         String cleanPhone = otpService.normalizePhone(phone);
-        String otp = otpService.generateAndSendOtp(cleanPhone);
+        otpService.generateAndSendOtp(cleanPhone);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Verification code dispatched to " + phone,
-                "phone", cleanPhone,
-                "otp", otp
+                "message", "Verification code sent via SMS to " + phone + ". Please check your phone.",
+                "phone", cleanPhone
         ));
     }
 

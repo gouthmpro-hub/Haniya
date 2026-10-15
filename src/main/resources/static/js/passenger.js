@@ -438,7 +438,7 @@ function renderNearbyAutos(autos) {
             <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-dim);">
                 <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛺</div>
                 <h4 style="color: var(--text-muted); margin-bottom: 0.4rem;">No Registered Drivers Active Nearby</h4>
-                <p style="font-size: 0.85rem; line-height: 1.5;">Strict policy: Only registered drivers who signed up and turned on GPS tracking in the Driver Portal appear on this map.</p>
+                <p style="font-size: 0.85rem; line-height: 1.5;">Strict policy: Only registered drivers manually added via the Admin Fleet Console appear on this map.</p>
             </div>
         `;
         return;

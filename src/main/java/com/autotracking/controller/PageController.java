@@ -21,22 +21,17 @@ public class PageController {
     }
 
     @GetMapping("/")
-    public String index(Authentication authentication, Model model) {
+    public String index(Authentication authentication) {
         if (isAuthenticatedUser(authentication)) {
-            model.addAttribute("authenticated", true);
-            model.addAttribute("username", authentication.getName());
-        } else {
-            model.addAttribute("authenticated", false);
+            return "redirect:/passenger/dashboard";
         }
-        return "index";
+        return "redirect:/login";
     }
 
     @GetMapping("/login")
     public String loginPage(Authentication authentication) {
         if (isAuthenticatedUser(authentication)) {
-            boolean isDriver = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
-            return isDriver ? "redirect:/driver/dashboard" : "redirect:/passenger/dashboard";
+            return "redirect:/passenger/dashboard";
         }
         return "login";
     }
@@ -44,7 +39,7 @@ public class PageController {
     @GetMapping("/register")
     public String registerPage(Authentication authentication) {
         if (isAuthenticatedUser(authentication)) {
-            return "redirect:/";
+            return "redirect:/passenger/dashboard";
         }
         return "register";
     }
@@ -58,16 +53,17 @@ public class PageController {
     @GetMapping("/passenger/dashboard")
     public String passengerDashboard(Authentication authentication, Model model) {
         User user = userService.findByEmail(authentication.getName());
+        if (user == null) {
+            user = userService.findByPhone(authentication.getName());
+        }
         model.addAttribute("user", user);
         return "passenger-dashboard";
     }
 
-    @GetMapping("/driver/dashboard")
-    public String driverDashboard(Authentication authentication, Model model) {
-        Driver driver = driverService.getDriverByUserEmail(authentication.getName());
-        model.addAttribute("driver", driver);
-        model.addAttribute("user", driver.getUser());
-        return "driver-dashboard";
+    @GetMapping({"/driver/dashboard", "/driver-dashboard", "/driver-dashboard.html", "/driver/**"})
+    public String driverDashboard() {
+        // Driver portal removed for end users; redirect to passenger tracking dashboard
+        return "redirect:/passenger/dashboard";
     }
 
     @GetMapping({"/admin/drivers", "/admin-dashboard.html", "/admin"})

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | GPS Auto Tracking</title>
+    <title>Sign Up | GPS Auto Tracking</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body style="display:flex; flex-direction:column; min-height:100vh;">
@@ -11,7 +11,7 @@
     <!-- Navbar -->
     <header>
         <nav class="navbar">
-            <a th:href="@{/}" href="/" class="nav-brand">
+            <a th:href="@{/login}" href="/login" class="nav-brand">
                 <div class="brand-icon">
                     <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
                 </div>
@@ -25,283 +25,66 @@
 
     <!-- Main Content -->
     <main style="flex:1; display:flex; align-items:center; justify-content:center; padding: 3rem 1.5rem;">
-        <div class="glass-card" style="width:100%; max-width:520px;">
+        <div class="glass-card" style="width:100%; max-width:460px;">
             <div style="text-align:center; margin-bottom:1.8rem;">
-                <h2 style="font-size:2rem; margin-bottom:0.4rem;">Mobile Verification</h2>
-                <p style="color:var(--text-muted); font-size:0.95rem;">
-                    Sign up with your verified mobile phone number. No email or password needed.
-                </p>
+                <div class="hero-badge" style="margin-bottom:0.7rem;">Quick Account Registration</div>
+                <h2 style="font-size:2rem; margin-bottom:0.4rem;">Create Account</h2>
+                <p style="color:var(--text-muted); font-size:0.95rem;">Join to discover and track nearby auto-rickshaws on the live Google Map.</p>
             </div>
 
-            <!-- Simulated SMS Push Toast Banner (Click to Autofill) -->
-            <div id="smsBanner" style="display:none;" class="sms-toast-banner" onclick="autofillReceivedOtp()">
-                <div class="sms-icon-bubble">💬</div>
-                <div class="sms-content">
-                    <div class="sms-header">
-                        <span class="sms-sender">AUTOTRACK SMS GATEWAY</span>
-                        <span class="sms-time">Just Now</span>
-                    </div>
-                    <div class="sms-body">
-                        Your verification code for <strong id="smsTargetPhone">+91 ...</strong> is 
-                        <span class="sms-code-highlight" id="smsOtpCode">------</span>. 
-                        <span style="color:var(--accent-amber-light); font-size:0.8rem; display:block; margin-top:0.25rem;">⚡ Tap here to autofill OTP</span>
-                    </div>
+            <form id="registerForm" onsubmit="handleDirectRegister(event)">
+                <!-- Full Name -->
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="regName">Full Name</label>
+                    <input type="text" id="regName" class="form-control" placeholder="e.g. Rahul Sharma" required minlength="2" autofocus>
                 </div>
-            </div>
 
-            <!-- STEP 1: Phone Number & OTP Verification -->
-            <div id="stepPhoneSection">
-                <div class="form-group">
-                    <label class="form-label" for="phoneInput">Mobile Phone Number</label>
+                <!-- Phone Number -->
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="regPhone">Mobile Phone Number</label>
                     <div class="phone-input-group">
                         <div class="country-prefix">🇮🇳 +91</div>
-                        <input type="tel" id="phoneInput" class="form-control" placeholder="98470 12345" maxlength="15" autofocus>
-                        <button type="button" class="btn btn-primary" id="btnSendOtp" onclick="handleSendOtp()" style="white-space:nowrap; padding:0.75rem 1.2rem;">
-                            Send OTP
-                        </button>
-                    </div>
-                    <small style="color:var(--text-dim); font-size:0.8rem; display:block; margin-top:0.4rem;">
-                        A 6-digit OTP will be dispatched to this exact mobile number.
-                    </small>
-                </div>
-
-                <!-- OTP Input Group (Hidden until OTP sent) -->
-                <div id="otpInputGroup" style="display:none; margin-top:1.5rem; background:rgba(245,158,11,0.04); border:1px dashed rgba(245,158,11,0.25); border-radius:12px; padding:1.2rem;">
-                    <label class="form-label" style="text-align:center; display:block;" for="otpInput">Enter 6-Digit Verification Code</label>
-                    <div style="display:flex; justify-content:center; gap:0.5rem; margin-bottom:1rem;">
-                        <input type="text" id="otpInput" class="form-control" placeholder="• • • • • •" maxlength="6" 
-                               style="max-width:240px; text-align:center; font-size:1.6rem; letter-spacing:0.35em; font-family:monospace; font-weight:700; color:var(--accent-amber-light);">
-                    </div>
-
-                    <button type="button" class="btn btn-primary btn-block" id="btnVerifyOtp" onclick="handleVerifyOtp()" style="padding:0.85rem;">
-                        Verify Mobile Number
-                    </button>
-
-                    <div style="text-align:center; margin-top:0.9rem;">
-                        <button type="button" id="btnResendOtp" class="btn btn-outline btn-sm" onclick="handleSendOtp()" style="font-size:0.8rem; display:none;">
-                            Resend Code
-                        </button>
-                        <span id="resendCountdown" style="color:var(--text-dim); font-size:0.8rem;">Resend available in 30s</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 2: Profile Details (Unlocked once phone is verified) -->
-            <form id="registrationForm" style="display:none;" onsubmit="handleFinalRegistration(event)">
-                
-                <div class="verified-phone-badge" id="verifiedBadge">
-                    <span>✅</span>
-                    <span>Verified Number: <strong id="verifiedPhoneDisplay">+91 ...</strong></span>
-                </div>
-
-                <!-- Role Selector -->
-                <label class="form-label">I want to register as:</label>
-                <div class="role-switch-container">
-                    <label class="role-card-option active" id="optionPassenger">
-                        <input type="radio" name="role" value="PASSENGER" checked onclick="selectRole('PASSENGER')">
-                        <span class="role-icon">🚶</span>
-                        <div class="role-title">Passenger</div>
-                        <small style="color:var(--text-muted); font-size:0.75rem;">Find nearby autos</small>
-                    </label>
-
-                    <label class="role-card-option" id="optionDriver">
-                        <input type="radio" name="role" value="DRIVER" onclick="selectRole('DRIVER')">
-                        <span class="role-icon">🛺</span>
-                        <div class="role-title">Auto Driver</div>
-                        <small style="color:var(--text-muted); font-size:0.75rem;">Share GPS & get trips</small>
-                    </label>
-                </div>
-
-                <!-- Full Name -->
-                <div class="form-group">
-                    <label class="form-label" for="name">Full Name</label>
-                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required minlength="2">
-                </div>
-
-                <!-- Driver-Specific Fields -->
-                <div id="driverFields" style="display:none; background:rgba(245,158,11,0.05); border:1px dashed rgba(245,158,11,0.3); border-radius:12px; padding:1.2rem; margin-bottom:1.4rem;">
-                    <div style="font-weight:700; color:var(--accent-amber); font-size:0.9rem; margin-bottom:0.8rem; display:flex; align-items:center; gap:0.5rem;">
-                        <span>🛺</span> Driver Vehicle Details
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="autoRegistrationNumber">Auto Registration Number</label>
-                        <input type="text" id="autoRegistrationNumber" name="autoRegistrationNumber" class="form-control" placeholder="e.g. KL-07-CD-4521" style="text-transform:uppercase;">
-                        <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.3rem; display:block;">
-                            Required by transport authorities for passenger GPS discovery.
-                        </small>
+                        <input type="tel" id="regPhone" class="form-control" placeholder="98470 12345" required>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" style="padding:0.95rem; font-size:1.05rem;" id="btnSubmitRegister">
-                    Complete Registration & Open Dashboard
+                <!-- Password -->
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label class="form-label" for="regPassword">Password</label>
+                    <input type="password" id="regPassword" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="padding:0.95rem; font-size:1.05rem;" id="btnRegSubmit">
+                    Create Account & Open Radar &rarr;
                 </button>
             </form>
 
             <div style="text-align:center; margin-top:1.8rem; font-size:0.9rem; color:var(--text-muted);">
-                Already have an account? <a th:href="@{/login}" href="/login" style="font-weight:600;">Sign in with Mobile OTP</a>
+                Already have an account? <a th:href="@{/login}" href="/login" style="font-weight:600; color:var(--accent-amber);">Sign in here</a>
             </div>
         </div>
     </main>
 
     <script>
-        let currentRole = 'PASSENGER';
-        let verifiedPhoneNumber = '';
-        let generatedOtp = '';
-        let resendTimer = null;
-        let resendSeconds = 30;
-
-        function selectRole(role) {
-            currentRole = role;
-            const optPass = document.getElementById('optionPassenger');
-            const optDriver = document.getElementById('optionDriver');
-            const driverFields = document.getElementById('driverFields');
-            const autoRegInput = document.getElementById('autoRegistrationNumber');
-
-            if (role === 'DRIVER') {
-                optDriver.classList.add('active');
-                optPass.classList.remove('active');
-                driverFields.style.display = 'block';
-                autoRegInput.required = true;
-            } else {
-                optPass.classList.add('active');
-                optDriver.classList.remove('active');
-                driverFields.style.display = 'none';
-                autoRegInput.required = false;
-            }
-        }
-
-        async function handleSendOtp() {
-            const rawPhone = document.getElementById('phoneInput').value.trim();
-            if (!rawPhone || rawPhone.length < 8) {
-                alert('Please enter a valid mobile phone number.');
-                return;
-            }
-
-            const formattedPhone = rawPhone.startsWith('+') ? rawPhone : '+91 ' + rawPhone;
-            const btnSend = document.getElementById('btnSendOtp');
-            btnSend.disabled = true;
-            btnSend.textContent = 'Sending...';
-
-            let serverOtp = '';
-            try {
-                const res = await fetch('/api/auth/otp/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: formattedPhone })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.otp) {
-                        serverOtp = data.otp;
-                    }
-                }
-            } catch(e) {}
-
-            // Fallback generation
-            if (!serverOtp) {
-                serverOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            }
-
-            generatedOtp = serverOtp;
-            document.getElementById('smsTargetPhone').textContent = formattedPhone;
-            document.getElementById('smsOtpCode').textContent = serverOtp;
-            document.getElementById('smsBanner').style.display = 'flex';
-            document.getElementById('otpInputGroup').style.display = 'block';
-            document.getElementById('phoneInput').disabled = true;
-            btnSend.textContent = 'Sent ✅';
-
-            startCountdown();
-        }
-
-        function startCountdown() {
-            clearInterval(resendTimer);
-            resendSeconds = 30;
-            const btnResend = document.getElementById('btnResendOtp');
-            const countdownEl = document.getElementById('resendCountdown');
-            btnResend.style.display = 'none';
-            countdownEl.style.display = 'inline';
-
-            resendTimer = setInterval(() => {
-                resendSeconds--;
-                countdownEl.textContent = `Resend available in ${resendSeconds}s`;
-                if (resendSeconds <= 0) {
-                    clearInterval(resendTimer);
-                    countdownEl.style.display = 'none';
-                    btnResend.style.display = 'inline-block';
-                }
-            }, 1000);
-        }
-
-        function autofillReceivedOtp() {
-            if (generatedOtp) {
-                const otpInput = document.getElementById('otpInput');
-                otpInput.value = generatedOtp;
-                handleVerifyOtp();
-            }
-        }
-
-        async function handleVerifyOtp() {
-            const enteredOtp = document.getElementById('otpInput').value.trim();
-            const rawPhone = document.getElementById('phoneInput').value.trim();
-            const formattedPhone = rawPhone.startsWith('+') ? rawPhone : '+91 ' + rawPhone;
-
-            if (enteredOtp.length !== 6) {
-                alert('Please enter the complete 6-digit OTP.');
-                return;
-            }
-
-            let isValid = false;
-
-            // Try backend verification
-            try {
-                const res = await fetch('/api/auth/otp/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: formattedPhone, otp: enteredOtp })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.verified) {
-                        isValid = true;
-                    }
-                }
-            } catch(e) {}
-
-            // Client-side fallback check
-            if (!isValid && enteredOtp === generatedOtp) {
-                isValid = true;
-            }
-
-            if (!isValid) {
-                alert('Invalid or expired OTP. Please verify the code received in SMS.');
-                return;
-            }
-
-            // OTP Verified Successfully!
-            verifiedPhoneNumber = formattedPhone;
-            document.getElementById('stepPhoneSection').style.display = 'none';
-            document.getElementById('smsBanner').style.display = 'none';
-            document.getElementById('verifiedPhoneDisplay').textContent = verifiedPhoneNumber;
-            document.getElementById('registrationForm').style.display = 'block';
-            document.getElementById('name').focus();
-        }
-
-        async function handleFinalRegistration(e) {
+        async function handleDirectRegister(e) {
             e.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const autoReg = document.getElementById('autoRegistrationNumber') ? document.getElementById('autoRegistrationNumber').value.trim().toUpperCase() : '';
+            const name = document.getElementById('regName').value.trim();
+            const rawPhone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const formattedPhone = rawPhone.startsWith('+') ? rawPhone : '+91 ' + rawPhone;
+
+            const btn = document.getElementById('btnRegSubmit');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
 
             const profile = {
                 name: name,
-                phone: verifiedPhoneNumber,
-                email: verifiedPhoneNumber.replace(/[^0-9]/g, '') + '@autotrack.phone',
-                role: currentRole,
-                autoRegistrationNumber: autoReg,
-                available: true
+                phone: formattedPhone,
+                email: formattedPhone.replace(/[^0-9]/g, '') + '@autotrack.phone',
+                role: 'PASSENGER'
             };
 
-            // Try Spring Boot API Registration
+            // 1. Try Spring Boot REST Registration
             try {
                 await fetch('/api/auth/register', {
                     method: 'POST',
@@ -309,54 +92,27 @@
                     body: JSON.stringify({
                         name: profile.name,
                         phone: profile.phone,
-                        email: profile.email,
-                        role: profile.role,
-                        autoRegistrationNumber: profile.autoRegistrationNumber
+                        password: password,
+                        role: 'PASSENGER'
                     })
                 });
-            } catch(e) {}
+            } catch(err) {}
 
-            // Save active session user
+            // 2. Client-side storage for active session
             localStorage.setItem('autotrack_current_user', JSON.stringify(profile));
 
-            // Save to registered users list in localStorage
+            // Save to registered users list
             try {
                 let list = JSON.parse(localStorage.getItem('autotrack_registered_users')) || [];
-                list = list.filter(u => u.phone !== verifiedPhoneNumber);
+                list = list.filter(u => u.phone !== formattedPhone);
                 list.push(profile);
                 localStorage.setItem('autotrack_registered_users', JSON.stringify(list));
-            } catch(err) {
+            } catch(e) {
                 localStorage.setItem('autotrack_registered_users', JSON.stringify([profile]));
             }
 
-            // If driver, strictly add to registered driver fleet
-            if (currentRole === 'DRIVER' && autoReg) {
-                try {
-                    let drivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
-                    drivers = drivers.filter(d => d.autoRegistrationNumber !== autoReg);
-                    drivers.push({
-                        driverId: Date.now(),
-                        driverName: profile.name,
-                        phone: verifiedPhoneNumber,
-                        autoRegistrationNumber: autoReg,
-                        latitude: 9.9825 + (Math.random() * 0.006 - 0.003),
-                        longitude: 76.2820 + (Math.random() * 0.006 - 0.003),
-                        accuracy: 8.0,
-                        available: true,
-                        lastUpdated: new Date().toLocaleTimeString()
-                    });
-                    localStorage.setItem('autotrack_drivers', JSON.stringify(drivers));
-                } catch(err) {
-                    console.warn(err);
-                }
-            }
-
-            alert('Account registered and mobile number verified for ' + profile.name + '! Redirecting to dashboard...');
-            if (currentRole === 'DRIVER') {
-                window.location.href = window.location.port === '8080' ? '/driver/dashboard' : '/driver-dashboard.html';
-            } else {
-                window.location.href = window.location.port === '8080' ? '/passenger/dashboard' : '/passenger-dashboard.html';
-            }
+            // Redirect directly to live passenger tracking map
+            window.location.href = window.location.port === '8080' ? '/passenger/dashboard' : '/passenger-dashboard.html';
         }
     </script>
 </body>

@@ -54,6 +54,8 @@ public class SecurityConfig {
                     "/",
                     "/login",
                     "/register",
+                    "/driver/**",
+                    "/driver-dashboard.html",
                     "/admin/**",
                     "/api/admin/**",
                     "/admin-dashboard.html",
@@ -67,7 +69,6 @@ public class SecurityConfig {
                 ).permitAll()
                 // Role-specific protected routes
                 .requestMatchers("/passenger/**", "/api/passenger/**").hasRole("PASSENGER")
-                .requestMatchers("/driver/**", "/api/driver/**", "/driver-dashboard.html").hasRole("DRIVER")
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
@@ -93,24 +94,12 @@ public class SecurityConfig {
     }
 
     /**
-     * Redirects users to their designated dashboard based on their role upon login.
+     * Redirects all logged-in users directly to the live passenger tracking map.
      */
     @Bean
     public AuthenticationSuccessHandler roleBasedSuccessHandler() {
         return (request, response, authentication) -> {
-            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-            boolean isDriver = authorities.stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
-            boolean isPassenger = authorities.stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_PASSENGER"));
-
-            if (isDriver) {
-                response.sendRedirect("/driver/dashboard");
-            } else if (isPassenger) {
-                response.sendRedirect("/passenger/dashboard");
-            } else {
-                response.sendRedirect("/");
-            }
+            response.sendRedirect("/passenger/dashboard");
         };
     }
 

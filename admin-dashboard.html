@@ -19,10 +19,9 @@
                 <div class="brand-text">Fleet<span>Manager</span></div>
             </a>
             <ul class="nav-links">
-                <li><a href="/" class="nav-link">Home</a></li>
                 <li><a href="/passenger-dashboard.html" class="nav-link">Passenger Map</a></li>
-                <li><a href="/driver-dashboard.html" class="nav-link">Driver Portal</a></li>
-                <li><a href="/admin-dashboard.html" class="nav-link active">Fleet Roster</a></li>
+                <li><a href="/admin-dashboard.html" class="nav-link active">Fleet Roster (Admin)</a></li>
+                <li><a href="/login.html" class="nav-link">Sign In</a></li>
             </ul>
         </nav>
     </header>
@@ -172,20 +171,26 @@
                     <input type="text" id="manualDriverName" class="form-control" placeholder="e.g. Arun Kumar" required minlength="2">
                 </div>
 
-                <div class="form-group" style="margin-bottom:1.1rem;">
-                    <label class="form-label" for="manualDriverEmail">Email Address *</label>
-                    <input type="email" id="manualDriverEmail" class="form-control" placeholder="e.g. arun@autotrack.com" required>
-                </div>
-
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.1rem;">
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" for="manualDriverPhone">Phone Number *</label>
+                        <label class="form-label" for="manualDriverPhone">Mobile Phone Number *</label>
                         <input type="tel" id="manualDriverPhone" class="form-control" placeholder="e.g. +91 98471 23456" required>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="manualDriverVehicle">Auto Reg. Plate *</label>
                         <input type="text" id="manualDriverVehicle" class="form-control" placeholder="e.g. KL-07-CD-1234" style="text-transform:uppercase;" required>
                     </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:1.1rem;">
+                    <label class="form-label" for="manualDriverLocationPreset">Initial Auto Stand / Location</label>
+                    <select id="manualDriverLocationPreset" class="form-control" style="cursor:pointer;" onchange="handleLocationPresetChange(this.value)">
+                        <option value="9.9825,76.2820">📍 Kochi Marine Drive (9.9825, 76.2820)</option>
+                        <option value="9.9715,76.2870">📍 MG Road / Maharajas (9.9715, 76.2870)</option>
+                        <option value="9.9670,76.3180">📍 Vyttila Mobility Hub (9.9670, 76.3180)</option>
+                        <option value="10.0240,76.3080">📍 Edappally Toll Junction (10.0240, 76.3080)</option>
+                        <option value="9.9650,76.2420">📍 Fort Kochi Beach (9.9650, 76.2420)</option>
+                    </select>
                 </div>
 
                 <div class="form-group" style="margin-bottom:1.1rem;">

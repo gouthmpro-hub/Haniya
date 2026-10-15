@@ -358,14 +358,25 @@ async function submitManualDriver(e) {
     e.preventDefault();
 
     const name = document.getElementById('manualDriverName').value.trim();
-    const email = document.getElementById('manualDriverEmail').value.trim().toLowerCase();
     const phone = document.getElementById('manualDriverPhone').value.trim();
     const autoRegistrationNumber = document.getElementById('manualDriverVehicle').value.trim().toUpperCase();
-    const password = document.getElementById('manualDriverPassword').value.trim() || 'password123';
-    const available = document.getElementById('manualDriverAvailable').checked;
+    const password = document.getElementById('manualDriverPassword') ? (document.getElementById('manualDriverPassword').value.trim() || 'password123') : 'password123';
+    const available = document.getElementById('manualDriverAvailable') ? document.getElementById('manualDriverAvailable').checked : true;
 
-    const lat = 9.9825 + (Math.random() * 0.008 - 0.004);
-    const lng = 76.2820 + (Math.random() * 0.008 - 0.004);
+    // Internal fallback email
+    const email = (phone.replace(/[^0-9]/g, '') || Date.now()) + '@autotrack.driver';
+
+    // Parse location preset
+    let lat = 9.9825;
+    let lng = 76.2820;
+    const presetEl = document.getElementById('manualDriverLocationPreset');
+    if (presetEl && presetEl.value) {
+        const parts = presetEl.value.split(',');
+        if (parts.length === 2) {
+            lat = parseFloat(parts[0]) + (Math.random() * 0.003 - 0.0015);
+            lng = parseFloat(parts[1]) + (Math.random() * 0.003 - 0.0015);
+        }
+    }
 
     const payload = {
         name: name,
