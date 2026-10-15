@@ -74,21 +74,13 @@ function initPassengerMap() {
 
     passengerMarker = L.marker([currentPassengerLat, currentPassengerLng], {
         icon: passengerIcon,
-        draggable: true
+        draggable: false
     }).addTo(passengerMap);
 
-    passengerMarker.bindPopup('<strong>Your Location (Pickup Point)</strong><br><small>Drag to adjust pickup location</small>');
+    passengerMarker.bindPopup('<strong>📍 Your Current Location</strong><br><small>Press "Show My Current Location" to update GPS</small>');
 
-    // Drag pickup pin event
-    passengerMarker.on('dragend', (e) => {
-        const newPos = e.target.getLatLng();
-        setPassengerLocation(newPos.lat, newPos.lng, false);
-    });
-
-    // Click map to change pickup location
-    passengerMap.on('click', (e) => {
-        setPassengerLocation(e.latlng.lat, e.latlng.lng, false);
-    });
+    // Fixed: Map clicking and pin dragging disabled so clicking the map does NOT change your location.
+    // Location is calibrated exclusively via the "Show My Current Location" button.
 
     // Draw visual search radius circle
     drawRadiusCircle();
@@ -167,10 +159,17 @@ function setupPassengerControls() {
         });
     }
 
+    const handleLocateClick = () => {
+        requestPassengerGPS(true);
+    };
+
     if (btnLocateMe) {
-        btnLocateMe.addEventListener('click', () => {
-            requestPassengerGPS(true);
-        });
+        btnLocateMe.addEventListener('click', handleLocateClick);
+    }
+
+    const btnFloatingLocate = document.getElementById('btnFloatingLocate');
+    if (btnFloatingLocate) {
+        btnFloatingLocate.addEventListener('click', handleLocateClick);
     }
 
     if (btnSearchDest && destinationInput) {
@@ -192,10 +191,16 @@ function setupPassengerControls() {
 
 /**
  * Requests the passenger's real smartphone/browser GPS coordinates with high accuracy.
+ * Centering on the blue pin occurs exclusively when this function is invoked.
  */
 function requestPassengerGPS(userInitiated = false) {
     if (!navigator.geolocation) {
-        if (userInitiated) showToast('Geolocation is not supported by your browser.', 'danger');
+        if (userInitiated) {
+            showToast('Geolocation is not supported by your browser.', 'danger');
+            if (passengerMap) {
+                passengerMap.setView([currentPassengerLat, currentPassengerLng], 15);
+            }
+        }
         fetchNearbyAutos();
         return;
     }
@@ -207,7 +212,7 @@ function requestPassengerGPS(userInitiated = false) {
     };
 
     if (userInitiated) {
-        showToast('Acquiring high-accuracy GPS fix...', 'info');
+        showToast('📍 Pinpointing your current GPS location...', 'info');
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -221,12 +226,17 @@ function requestPassengerGPS(userInitiated = false) {
             } catch(e) {}
 
             setPassengerLocation(lat, lng, true, accuracy);
-            showToast(`GPS lock acquired! Precision: ±${Math.round(accuracy)}m`, 'success');
+            if (userInitiated) {
+                showToast(`📍 Found your location! Precision: ±${Math.round(accuracy)}m`, 'success');
+            }
         },
         (error) => {
             console.warn('GPS location error:', error.message);
             if (userInitiated) {
-                showToast('Unable to get device GPS. Using current pin position.', 'info');
+                if (passengerMap) {
+                    passengerMap.setView([currentPassengerLat, currentPassengerLng], 15);
+                }
+                showToast('Device GPS unavailable. Centered on current pickup point.', 'info');
             }
             fetchNearbyAutos();
         },
