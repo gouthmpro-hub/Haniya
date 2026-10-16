@@ -18,11 +18,19 @@
                 </div>
                 <div class="brand-text">Fleet<span>Manager</span></div>
             </a>
-            <ul class="nav-links">
-                <li><a href="/passenger-dashboard.html" class="nav-link">Passenger Map</a></li>
-                <li><a href="/admin-dashboard.html" class="nav-link active">Fleet Roster (Admin)</a></li>
-                <li><a href="/login.html" class="nav-link">Sign In</a></li>
-            </ul>
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+                <div class="kerala-fleet-pill" id="adminFleetPill">
+                    <span class="pulse-dot" style="width:8px; height:8px; background:var(--accent-amber);"></span>
+                    <span>Kerala Fleet:</span>
+                    <strong id="adminHeaderDriverCount">...</strong>
+                    <span>Drivers</span>
+                </div>
+                <ul class="nav-links" style="margin:0;">
+                    <li><a href="/passenger-dashboard.html" class="nav-link">Passenger Map</a></li>
+                    <li><a href="/admin-dashboard.html" class="nav-link active">Fleet Roster (Admin)</a></li>
+                    <li><a href="/login.html" class="nav-link">Sign In</a></li>
+                </ul>
+            </div>
         </nav>
     </header>
 

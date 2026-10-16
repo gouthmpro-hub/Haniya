@@ -46,7 +46,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     connectWebSocket();
     requestWakeLock();
+    fetchShareFleetStats();
+    setInterval(fetchShareFleetStats, 4000);
 });
+
+async function fetchShareFleetStats() {
+    try {
+        const res = await fetch('/api/drivers/stats');
+        if (res.ok) {
+            const data = await res.json();
+            const count = data.totalRegisteredDrivers ?? data.count ?? 0;
+            const el = document.getElementById('driverShareFleetCount');
+            if (el) el.textContent = count;
+        }
+    } catch(e) {}
+}
 
 /**
  * Parses query params like ?name=Haniya&phone=9847123456

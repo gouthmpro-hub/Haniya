@@ -174,6 +174,20 @@ function setupPassengerControls() {
         btnFloatingLocate.addEventListener('click', handleLocateClick);
     }
 
+    const btnViewAllKerala = document.getElementById('btnViewAllKerala');
+    if (btnViewAllKerala) {
+        btnViewAllKerala.addEventListener('click', () => {
+            zoomToFitAllKeralaDrivers();
+        });
+    }
+
+    const btnFloatingKerala = document.getElementById('btnFloatingKerala');
+    if (btnFloatingKerala) {
+        btnFloatingKerala.addEventListener('click', () => {
+            zoomToFitAllKeralaDrivers();
+        });
+    }
+
     if (btnSearchDest && destinationInput) {
         btnSearchDest.addEventListener('click', () => {
             const query = destinationInput.value.trim();
@@ -366,30 +380,30 @@ async function initPassengerUserProfile() {
 }
 
 /**
- * Fetches nearby available auto-rickshaws.
- * STRICT POLICY: Only signed-up drivers who are marked available are allowed on the map.
- * Zero mock or synthetic drivers are allowed.
+ * Fetches real registered drivers across ALL of Kerala from central backend.
+ * NO RADIUS LIMIT - Every registered auto across Kerala is shown to all users,
+ * sorted from closest to farthest, with exact km difference and ETA.
  */
 async function fetchNearbyAutos() {
-    const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         window.location.port !== '8080';
+    // 1. Refresh live Kerala fleet stats & counts across all UI elements
+    fetchFleetStats();
 
-    if (!isStaticHost) {
-        try {
-            const url = `/api/passenger/nearby-autos?lat=${currentPassengerLat}&lng=${currentPassengerLng}&radius=${currentRadiusKm}`;
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                renderNearbyAutos(data.autos || []);
+    // 2. Query central backend public fleet endpoint for ALL Kerala drivers
+    try {
+        const url = `/api/drivers/all?lat=${currentPassengerLat}&lng=${currentPassengerLng}`;
+        const response = await fetch(url);
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.drivers && Array.isArray(data.drivers)) {
+                renderNearbyAutos(data.drivers);
                 return;
             }
-        } catch (err) {
-            // Fall through to client-side registered driver fleet
         }
+    } catch (err) {
+        console.warn('Central backend driver query failed, using local sync fallback:', err);
     }
 
-    // Strictly query registered drivers from localStorage (NO fake mock drivers)
+    // 3. Fallback to client-side registered driver database
     let registeredDrivers = [];
     try {
         registeredDrivers = JSON.parse(localStorage.getItem('autotrack_drivers')) || [];
@@ -397,9 +411,9 @@ async function fetchNearbyAutos() {
         registeredDrivers = [];
     }
 
-    // Filter strictly: must be available and within search radius
+    // Include all registered drivers across Kerala without radius cutoff
     const activeAutos = registeredDrivers
-        .filter(driver => driver && driver.available === true && driver.latitude && driver.longitude)
+        .filter(driver => driver && driver.available !== false && driver.latitude && driver.longitude)
         .map(driver => {
             const dist = calculateHaversineKm(currentPassengerLat, currentPassengerLng, driver.latitude, driver.longitude);
             return {
@@ -409,16 +423,83 @@ async function fetchNearbyAutos() {
                 autoRegistrationNumber: driver.autoRegistrationNumber,
                 latitude: driver.latitude,
                 longitude: driver.longitude,
-                accuracy: driver.accuracy || 10.0,
+                accuracy: driver.accuracy || 8.0,
                 available: true,
                 distanceKm: Number(dist.toFixed(2)),
                 etaMinutes: Math.max(1, Math.round((dist / 25) * 60))
             };
         })
-        .filter(a => a.distanceKm <= currentRadiusKm)
         .sort((a, b) => a.distanceKm - b.distanceKm);
 
     renderNearbyAutos(activeAutos);
+}
+
+/**
+ * Fetches central backend registered driver stats across all Kerala
+ * and updates every driver count badge on the phone screen.
+ */
+async function fetchFleetStats() {
+    try {
+        const res = await fetch('/api/drivers/stats');
+        if (res.ok) {
+            const data = await res.json();
+            const total = data.totalRegisteredDrivers ?? data.count ?? 0;
+            updateFleetStatsDisplays(total);
+            return;
+        }
+    } catch(e) {}
+
+    // Fallback based on current autos length
+    if (currentAutosList && currentAutosList.length > 0) {
+        updateFleetStatsDisplays(currentAutosList.length);
+    }
+}
+
+/**
+ * Synchronizes driver count on all UI elements across the screen.
+ */
+function updateFleetStatsDisplays(count) {
+    const navEl = document.getElementById('keralaTotalDriversCount');
+    const sideEl = document.getElementById('sidebarTotalDrivers');
+    const floatEl = document.getElementById('floatingDriverCount');
+    const badgeEl = document.getElementById('nearbyCountBadge');
+
+    if (navEl) navEl.textContent = count;
+    if (sideEl) sideEl.textContent = count;
+    if (floatEl) floatEl.textContent = count;
+    if (badgeEl && (!currentAutosList || currentAutosList.length === 0)) {
+        badgeEl.textContent = `${count} Registered in Kerala`;
+    }
+}
+
+/**
+ * Automatically fits map bounds to display all registered drivers across Kerala at once.
+ */
+function zoomToFitAllKeralaDrivers() {
+    if (!passengerMap) return;
+    const latLngs = [];
+
+    // Current passenger location
+    if (currentPassengerLat && currentPassengerLng) {
+        latLngs.push([currentPassengerLat, currentPassengerLng]);
+    }
+
+    // All registered drivers across Kerala
+    if (currentAutosList && currentAutosList.length > 0) {
+        currentAutosList.forEach(a => {
+            if (a.latitude && a.longitude) {
+                latLngs.push([a.latitude, a.longitude]);
+            }
+        });
+    }
+
+    if (latLngs.length > 1) {
+        const bounds = L.latLngBounds(latLngs);
+        passengerMap.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+        showToast(`🌴 Viewing all ${latLngs.length - 1} registered drivers across Kerala!`, 'info');
+    } else if (latLngs.length === 1) {
+        passengerMap.setView(latLngs[0], 14);
+    }
 }
 
 /**
@@ -438,7 +519,12 @@ function renderNearbyAutos(autos) {
     currentAutosList = autos;
 
     if (countBadge) {
-        countBadge.textContent = `${autos.length} Available`;
+        countBadge.textContent = `${autos.length} Active in Kerala`;
+    }
+    updateFleetStatsDisplays(autos.length);
+    const nearestEl = document.getElementById('sidebarNearestDistance');
+    if (nearestEl && autos.length > 0) {
+        nearestEl.textContent = `${autos[0].distanceKm} km (${autos[0].driverName})`;
     }
 
     // Keep track of active driver IDs from this response
@@ -672,50 +758,44 @@ function highlightSidebarCard(driverId) {
  * Connects to Spring Boot STOMP WebSocket for real-time driver coordinates push.
  */
 function initWebSocket() {
-    const isStatic = window.location.hostname.includes('vercel.app') || 
-                     window.location.hostname.includes('github.io') || 
-                     (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
-
-    if (isStatic && !window.location.hostname.includes('localhost')) {
-        console.log('Running on static host (Vercel) - WebSocket disabled, using dynamic simulated telemetry.');
-        return;
-    }
-
     try {
         const socket = new SockJS('/ws-auto-tracking');
         stompClient = Stomp.over(socket);
         stompClient.debug = null; // Disable verbose console log
 
         stompClient.connect({}, (frame) => {
-            // Subscribe to live driver updates channel
+            // 1. Subscribe to live driver movement telemetry
             stompClient.subscribe('/topic/driver-updates', (message) => {
-                const update = JSON.parse(message.body);
-                handleRealtimeDriverUpdate(update);
+                try {
+                    const update = JSON.parse(message.body);
+                    handleRealtimeDriverUpdate(update);
+                } catch(e) {}
+            });
+
+            // 2. Subscribe to central fleet registration events across all Kerala
+            stompClient.subscribe('/topic/fleet-stats', (message) => {
+                try {
+                    const data = JSON.parse(message.body);
+                    const count = data.totalRegisteredDrivers;
+                    updateFleetStatsDisplays(count);
+                    showToast(`🛺 New driver registered (${data.driverName || 'Kerala Fleet'})! Total drivers: ${count}`, 'success');
+                    fetchNearbyAutos();
+                } catch(e) {}
             });
         }, (error) => {
-            console.warn('WebSocket connection failed, relying on periodic polling:', error);
+            // Polling fallback guarantees updates even without WebSockets
         });
     } catch (err) {
-        console.warn('WebSocket init error, fallback active:', err);
+        // Fallback active
     }
 }
 
 /**
- * Handles incoming live WebSocket telemetry event.
+ * Handles incoming live WebSocket telemetry event across all Kerala.
  */
 function handleRealtimeDriverUpdate(update) {
-    // If the driver updated location and is available
     if (update.available && update.latitude && update.longitude) {
-        // Calculate distance from current passenger position
-        const dist = calculateHaversineKm(currentPassengerLat, currentPassengerLng, update.latitude, update.longitude);
-        if (dist <= currentRadiusKm) {
-            fetchNearbyAutos(); // Refresh list to recalculate exact ordering and ETA
-        } else if (autoMarkersMap.has(update.driverId)) {
-            // Driver moved outside passenger radius
-            passengerMap.removeLayer(autoMarkersMap.get(update.driverId));
-            autoMarkersMap.delete(update.driverId);
-            fetchNearbyAutos();
-        }
+        fetchNearbyAutos(); // Refresh list to recalculate exact ordering and ETA
     } else {
         // Driver went offline or became unavailable: remove marker
         if (autoMarkersMap.has(update.driverId)) {
@@ -727,12 +807,12 @@ function handleRealtimeDriverUpdate(update) {
 }
 
 /**
- * Periodic Polling Fallback (every 5 seconds) to guarantee fresh data on cellular connections.
+ * Periodic Polling Fallback (every 3.5 seconds) to guarantee fresh data across all mobile phones.
  */
 function startPollingFallback() {
     pollTimer = setInterval(() => {
         fetchNearbyAutos();
-    }, 5000);
+    }, 3500);
 }
 
 /**

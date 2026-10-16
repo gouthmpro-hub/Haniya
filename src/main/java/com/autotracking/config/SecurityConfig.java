@@ -39,14 +39,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF for login, register, API endpoints, H2 console, and WebSockets to prevent mobile fetch rejection
-            .csrf(csrf -> csrf.ignoringRequestMatchers(
-                "/login",
-                "/register",
-                "/api/**",
-                "/ws-auto-tracking/**",
-                "/h2-console/**"
-            ))
+            // Disable CSRF completely for seamless REST and mobile access
+            .csrf(csrf -> csrf.disable())
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
                 // Publicly accessible pages and static assets
@@ -61,7 +55,9 @@ public class SecurityConfig {
                     "/admin/**",
                     "/api/admin/**",
                     "/api/driver/**",
+                    "/api/drivers/**",
                     "/admin-dashboard.html",
+                    "/api/passenger/**",
                     "/passenger-dashboard.html",
                     "/api/auth/**",
                     "/css/**",
@@ -71,7 +67,7 @@ public class SecurityConfig {
                     "/h2-console/**"
                 ).permitAll()
                 // Role-specific protected routes
-                .requestMatchers("/passenger/**", "/api/passenger/**").hasRole("PASSENGER")
+                .requestMatchers("/passenger/**").hasRole("PASSENGER")
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

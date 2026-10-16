@@ -27,6 +27,9 @@ public class RegisterRequest {
     // Driver-specific field (Required if role == DRIVER)
     private String autoRegistrationNumber;
 
+    private Double latitude = 9.9825;
+    private Double longitude = 76.2820;
+
     public RegisterRequest() {
     }
 
@@ -84,5 +87,21 @@ public class RegisterRequest {
 
     public void setOtp(String otp) {
         this.otp = otp;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

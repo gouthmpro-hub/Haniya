@@ -31,8 +31,7 @@ function getDefaultDemoDrivers() {
  */
 async function loadFleetData() {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+                         window.location.hostname.includes('github.io');
 
     if (!isStaticHost) {
         try {
@@ -85,6 +84,8 @@ function updateStatsHUD(total, available, busy) {
     if (totalEl) totalEl.textContent = total;
     if (availEl) availEl.textContent = available;
     if (busyEl) busyEl.textContent = busy;
+    const headerEl = document.getElementById('adminHeaderDriverCount');
+    if (headerEl) headerEl.textContent = total;
 }
 
 /**
@@ -201,8 +202,7 @@ function confirmDeleteDriver(driverId, driverName, autoNumber) {
  */
 async function deleteDriver(driverId, driverName) {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+                         window.location.hostname.includes('github.io');
 
     if (!isStaticHost) {
         try {
@@ -242,8 +242,7 @@ async function deleteDriver(driverId, driverName) {
  */
 async function toggleDriver(driverId) {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+                         window.location.hostname.includes('github.io');
 
     if (!isStaticHost) {
         try {
@@ -411,8 +410,7 @@ async function quickAdd3Drivers() {
     showToast('Registering 3 test drivers at exact locations...', 'info');
 
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+                         window.location.hostname.includes('github.io');
 
     for (let i = 0; i < demoFleet.length; i++) {
         const d = demoFleet[i];
@@ -654,8 +652,7 @@ async function quickAddDriverHaniya() {
     showToast('Registering driver Haniya...', 'info');
 
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         (window.location.port !== '8080' && window.location.protocol.startsWith('http'));
+                         window.location.hostname.includes('github.io');
 
     if (!isStaticHost) {
         try {

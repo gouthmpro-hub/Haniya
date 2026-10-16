@@ -29,8 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function enforceDriverAuthentication() {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         window.location.port !== '8080';
+                         window.location.hostname.includes('github.io');
 
     if (!isStaticHost) {
         try {
@@ -411,8 +410,7 @@ async function sendLocationToBackend(latitude, longitude, accuracy) {
     } catch(err) {}
 
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         window.location.port !== '8080';
+                         window.location.hostname.includes('github.io');
 
     if (isStaticHost) return;
 
@@ -463,8 +461,7 @@ async function updateDriverAvailability(isAvailable) {
     } catch(err) {}
 
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         window.location.port !== '8080';
+                         window.location.hostname.includes('github.io');
 
     if (isStaticHost) {
         showToast(isAvailable ? 'Driver status: Available for Rides' : 'Driver status: Busy / Off-Duty', isAvailable ? 'success' : 'info');
@@ -492,8 +489,7 @@ async function updateDriverAvailability(isAvailable) {
  */
 async function fetchCurrentDriverStatus() {
     const isStaticHost = window.location.hostname.includes('vercel.app') || 
-                         window.location.hostname.includes('github.io') || 
-                         window.location.port !== '8080';
+                         window.location.hostname.includes('github.io');
 
     if (isStaticHost) {
         const lastUpdatedEl = document.getElementById('hudLastUpdated');

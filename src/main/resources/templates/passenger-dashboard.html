@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Passenger Dashboard | GPS Auto Tracking</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body style="height:100vh; overflow:hidden;">
 
     <!-- Top Navigation Bar -->
     <header>
         <nav class="navbar" style="padding: 0.8rem 2rem;">
-            <a th:href="@{/}" class="nav-brand">
+            <a href="/" class="nav-brand">
                 <div class="brand-icon">
                     <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
                 </div>
@@ -21,16 +21,25 @@
             </a>
 
             <div style="display:flex; align-items:center; gap:1.2rem;">
+                <!-- Live Central Kerala Driver Counter -->
+                <div class="kerala-fleet-pill" id="navbarFleetPill" style="display:inline-flex; align-items:center; gap:0.45rem;">
+                    <span class="pulse-dot" style="width:8px; height:8px; background:var(--accent-amber);"></span>
+                    <span>Kerala Fleet:</span>
+                    <strong id="keralaTotalDriversCount">...</strong>
+                    <span>Drivers</span>
+                </div>
+
                 <div style="font-size:0.9rem;">
-                    Hello, <strong id="passengerNameDisplay" th:text="${user != null ? user.name : 'Passenger'}" style="color:var(--text-main);">Passenger</strong>
+                    Hello, <strong id="passengerNameDisplay" style="color:var(--text-main);">Passenger</strong>
                     <span style="background:rgba(59,130,246,0.15); color:#60a5fa; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:6px; margin-left:6px; font-weight:600;">PASSENGER</span>
                 </div>
-                <a href="/admin/drivers" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; text-decoration:none;">
-                    <span>➕</span> Add Drivers
+                <a href="/register.html" class="btn btn-primary btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; text-decoration:none;">
+                    <span>🛺</span> Register Driver
                 </a>
-                <form th:action="@{/logout}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-outline btn-sm">Logout</button>
-                </form>
+                <a href="/admin-dashboard.html" class="btn btn-outline btn-sm" style="display:flex; align-items:center; gap:0.4rem; font-weight:600; text-decoration:none;">
+                    <span>⚙️</span> Fleet Admin
+                </a>
+                <a href="/login" class="btn btn-outline btn-sm">Logout</a>
             </div>
         </nav>
     </header>
@@ -40,6 +49,27 @@
         
         <!-- Left Sidebar: Controls & Nearby List -->
         <aside class="dashboard-sidebar">
+
+            <!-- Kerala State-Wide Fleet Counter Card -->
+            <div style="background:linear-gradient(135deg, rgba(30,58,138,0.4) 0%, rgba(15,23,42,0.85) 100%); border:1px solid rgba(59,130,246,0.35); border-radius:10px; padding:0.85rem 1rem; margin-bottom:0.85rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:#93c5fd; font-weight:700;">🌴 All Kerala Central Fleet</span>
+                    <span style="font-size:0.7rem; background:rgba(16,185,129,0.2); color:#34d399; padding:0.15rem 0.45rem; border-radius:6px; font-weight:600;">Statewide Live</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+                    <div>
+                        <div style="font-size:1.8rem; font-weight:800; color:#ffffff; line-height:1;" id="sidebarTotalDrivers">...</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:3px;">Total Registered Drivers</div>
+                    </div>
+                    <button id="btnViewAllKerala" class="btn btn-outline btn-sm" style="font-size:0.78rem; padding:0.35rem 0.75rem; border-color:rgba(147,197,253,0.4); color:#bfdbfe; font-weight:600; cursor:pointer;" title="Fit map to show all Kerala drivers">
+                        🗺️ View All Kerala
+                    </button>
+                </div>
+                <div style="margin-top:0.45rem; padding-top:0.35rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem; color:#94a3b8; display:flex; justify-content:space-between;">
+                    <span>Nearest Auto:</span>
+                    <strong id="sidebarNearestDistance" style="color:var(--accent-emerald);">Locating...</strong>
+                </div>
+            </div>
             
             <!-- Location & Radar Panel -->
             <div class="glass-card" style="padding: 1rem;">
@@ -68,21 +98,6 @@
                     </div>
                 </div>
 
-                <!-- Radius Slider -->
-                <div style="margin-bottom: 0.85rem;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.25rem;">
-                        <span style="color:var(--text-muted); font-weight:500;">Search Radius:</span>
-                        <strong id="radiusValue" style="color:var(--accent-amber);">15.0 km</strong>
-                    </div>
-                    <input type="range" id="radiusSlider" min="1" max="25" step="0.5" value="15.0" style="width:100%; accent-color:var(--accent-amber); cursor:pointer;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-dim); margin-top:2px;">
-                        <span>1 km</span>
-                        <span>5 km</span>
-                        <span>15 km</span>
-                        <span>25 km</span>
-                    </div>
-                </div>
-
                 <!-- Destination Search -->
                 <div>
                     <label class="form-label" for="destinationInput" style="font-size:0.78rem; margin-bottom:0.25rem;">Destination (Optional)</label>
@@ -99,10 +114,10 @@
             <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
                     <h3 style="font-size:1.15rem; display:flex; align-items:center; gap:0.5rem;">
-                        <span>🛺</span> Available Autos
+                        <span>🛺</span> Kerala Fleet
                     </h3>
                     <span id="nearbyCountBadge" class="auto-badge" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); border-color:rgba(16,185,129,0.3);">
-                        Scanning...
+                        Scanning Kerala...
                     </span>
                 </div>
 
@@ -122,9 +137,14 @@
             <div class="map-floating-overlay">
                 <span class="pulse-dot"></span>
                 <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">
-                    Live GPS Telemetry Active
+                    Live GPS Telemetry Active • All Kerala
                 </div>
             </div>
+
+            <!-- Floating "View All Kerala Drivers" Button -->
+            <button type="button" id="btnFloatingKerala" class="map-kerala-floating-btn" title="View all registered autos across Kerala">
+                <span>🌴</span> View All Kerala Drivers (<span id="floatingDriverCount">...</span>)
+            </button>
 
             <!-- Floating "Show My Current Location" Button -->
             <button type="button" id="btnFloatingLocate" class="map-locate-floating-btn" title="Center on My Real Device GPS Location">
@@ -137,7 +157,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script th:src="@{/js/passenger.js}"></script>
+    <script src="/js/passenger.js"></script>
 
 </body>
 </html>

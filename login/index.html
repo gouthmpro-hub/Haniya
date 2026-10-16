@@ -15,11 +15,18 @@
                 <div class="brand-icon">
                     <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
                 </div>
-                <div class="brand-text">Auto<span>Track</span></div>
-            </a>
-            <ul class="nav-links">
-                <li><a href="/register" class="nav-link">Sign Up</a></li>
-            </ul>
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+                <!-- Live Central Kerala Driver Counter -->
+                <div class="kerala-fleet-pill" id="loginFleetBadge">
+                    <span class="pulse-dot" style="width:8px; height:8px;"></span>
+                    <span>Kerala Fleet:</span>
+                    <strong id="loginHeaderDriverCount">...</strong>
+                    <span>Drivers</span>
+                </div>
+                <ul class="nav-links" style="margin:0;">
+                    <li><a href="/register" class="nav-link">Sign Up</a></li>
+                </ul>
+            </div>
         </nav>
     </header>
 
@@ -143,6 +150,23 @@
             } else {
                 handleDirectLogin(new Event('submit'));
             }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchFleetCount();
+            setInterval(fetchFleetCount, 4000);
+        });
+
+        async function fetchFleetCount() {
+            try {
+                const res = await fetch('/api/drivers/stats');
+                if (res.ok) {
+                    const data = await res.json();
+                    const count = data.totalRegisteredDrivers ?? data.count ?? 0;
+                    const el = document.getElementById('loginHeaderDriverCount');
+                    if (el) el.textContent = count;
+                }
+            } catch(e) {}
         }
     </script>
 </body>

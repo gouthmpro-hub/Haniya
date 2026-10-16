@@ -128,7 +128,6 @@ public class DriverLocationService {
                             timeFormatted
                     );
                 })
-                .filter(dto -> dto.getDistanceKm() <= effectiveRadius)
                 .sorted(Comparator.comparingDouble(NearbyDriverDTO::getDistanceKm))
                 .collect(Collectors.toList());
     }

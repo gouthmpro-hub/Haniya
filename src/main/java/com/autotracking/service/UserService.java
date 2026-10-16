@@ -112,8 +112,10 @@ public class UserService implements UserDetailsService {
             );
             Driver savedDriver = driverRepository.save(driver);
 
-            // Seed initial location around Kochi so driver is immediately discoverable
-            DriverLocation initialLoc = new DriverLocation(savedDriver, 9.9825, 76.2820, 10.0);
+            // Seed initial location from registration coordinates so driver is immediately discoverable
+            double initialLat = (request.getLatitude() != null) ? request.getLatitude() : 9.9825;
+            double initialLng = (request.getLongitude() != null) ? request.getLongitude() : 76.2820;
+            DriverLocation initialLoc = new DriverLocation(savedDriver, initialLat, initialLng, 10.0);
             locationRepository.save(initialLoc);
         }
 
