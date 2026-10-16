@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Auto Rickshaw Driver | AutoTrack Live</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <style>
+    .registration-container {
+      max-width: 900px;
+      margin: 100px auto 40px;
+      padding: 0 24px;
+    }
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+    }
+    .avatar-preset-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .avatar-preset-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: var(--transition);
+      object-fit: cover;
+    }
+    .avatar-preset-img.selected {
+      border-color: var(--auto-yellow);
+      transform: scale(1.1);
+      box-shadow: 0 0 10px var(--auto-glow);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header-bar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-icon-box">🛺</div>
+      <div class="brand-text">
+        <h1>AutoTrack <span>Live</span></h1>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="brand-badge">College Mini Project</span>
+        </div>
+      </div>
+    </a>
+
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">
+        <span>🗺️</span> Live Map
+      </a>
+      <a href="drivers.html" class="nav-link">
+        <span>📋</span> Registered Drivers
+      </a>
+      <a href="add-driver.html" class="nav-link active">
+        <span>➕</span> Register Driver
+      </a>
+      <a href="driver-portal.html" class="nav-link">
+        <span>📡</span> Driver GPS Mode
+      </a>
+      <a href="project-info.html" class="nav-link">
+        <span>🎓</span> Project Viva & Report
+      </a>
+    </nav>
+  </header>
+
+  <!-- Registration Form Container -->
+  <main class="registration-container">
+    
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:1.8rem; margin-bottom:6px;">Register New Auto Rickshaw</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem;">
+        Add a new driver and vehicle to the live tracking database. Once submitted, the auto appears instantly on Google Maps with real-time GPS telemetry.
+      </p>
+    </div>
+
+    <div class="form-card">
+      <form id="driverRegisterForm">
+        
+        <h3 style="font-size:1.15rem; color:var(--auto-yellow); margin-bottom:18px; display:flex; align-items:center; gap:8px;">
+          <span>👤</span> Driver & Vehicle Information
+        </h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Driver Full Name *</label>
+            <input type="text" id="name" class="form-input" placeholder="e.g. Anand Krishnan" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Mobile Number *</label>
+            <input type="tel" id="phone" class="form-input" placeholder="+91 98470 12345" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Auto Registration Plate *</label>
+            <input type="text" id="autoNumber" class="form-input" placeholder="KL-07-CD-8899" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Auto Model</label>
+            <input type="text" id="autoModel" class="form-input" placeholder="Bajaj RE Compact 4S" value="Bajaj RE Compact 4S" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fuel Type</label>
+            <select id="fuelType" class="form-select">
+              <option value="CNG">CNG (Clean Fuel)</option>
+              <option value="Petrol">Petrol</option>
+              <option value="Electric">Electric / EV (Mahindra Treo)</option>
+              <option value="Diesel">Diesel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designated Base Auto Stand *</label>
+            <input type="text" id="standName" class="form-input" placeholder="e.g. Engineering College Stand" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Base Minimum Fare (₹)</label>
+            <input type="number" id="baseFare" class="form-input" value="30" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fare Rate per Kilometer (₹/km)</label>
+            <input type="number" id="farePerKm" class="form-input" value="15" />
+          </div>
+        </div>
+
+        <h3 style="font-size:1.15rem; color:var(--auto-yellow); margin:24px 0 16px; display:flex; align-items:center; gap:8px;">
+          <span>📍</span> Initial GPS Coordinates & Location
+        </h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" step="0.0001" id="latitude" class="form-input" value="10.0261" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" step="0.0001" id="longitude" class="form-input" value="76.3125" required />
+          </div>
+        </div>
+
+        <button type="button" onclick="detectGPS()" class="btn-pill secondary" style="margin-bottom:20px;">
+          📍 Use My Device's Current GPS Coordinates
+        </button>
+
+        <div class="form-group">
+          <label class="form-label">Driver Profile Avatar URL</label>
+          <input type="url" id="photoUrl" class="form-input" value="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" />
+          <div class="avatar-preset-row">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" class="avatar-preset-img selected" onclick="selectAvatar(this)" />
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150" class="avatar-preset-img" onclick="selectAvatar(this)" />
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150" class="avatar-preset-img" onclick="selectAvatar(this)" />
+            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150" class="avatar-preset-img" onclick="selectAvatar(this)" />
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150" class="avatar-preset-img" onclick="selectAvatar(this)" />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:28px;">
+          <a href="index.html" class="btn-pill secondary">Cancel</a>
+          <button type="submit" class="btn-pill primary" style="padding:12px 28px; font-size:0.95rem;">
+            🛺 Register Auto Rickshaw
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </main>
+
+  <script>
+    function selectAvatar(el) {
+      document.querySelectorAll('.avatar-preset-img').forEach(img => img.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('photoUrl').value = el.src;
+    }
+
+    function detectGPS() {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+          alert("Acquired GPS coordinates: " + pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4));
+        },
+        (err) => alert("Could not fetch GPS: " + err.message)
+      );
+    }
+
+    document.getElementById('driverRegisterForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const newDriver = {
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        autoNumber: document.getElementById('autoNumber').value.trim(),
+        autoModel: document.getElementById('autoModel').value.trim(),
+        fuelType: document.getElementById('fuelType').value,
+        standName: document.getElementById('standName').value.trim(),
+        baseFare: parseFloat(document.getElementById('baseFare').value) || 30.0,
+        farePerKm: parseFloat(document.getElementById('farePerKm').value) || 15.0,
+        latitude: parseFloat(document.getElementById('latitude').value),
+        longitude: parseFloat(document.getElementById('longitude').value),
+        photoUrl: document.getElementById('photoUrl').value,
+        heading: Math.floor(Math.random() * 360),
+        isAvailable: true,
+        isSimulating: true
+      };
+
+      try {
+        const res = await fetch('/api/drivers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newDriver)
+        });
+
+        if (res.ok) {
+          const created = await res.json();
+          alert(`Success! Driver ${created.name} (${created.autoNumber}) registered in Java backend.`);
+          window.location.href = 'index.html';
+        } else {
+          alert('Error registering driver. Please check inputs.');
+        }
+      } catch (err) {
+        alert('Server connection error.');
+      }
+    });
+  </script>
+
+</body>
+</html>

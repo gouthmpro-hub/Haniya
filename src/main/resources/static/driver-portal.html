@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver GPS Transmitter | AutoTrack Live</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <style>
+    .portal-container {
+      max-width: 800px;
+      margin: 100px auto 40px;
+      padding: 0 24px;
+    }
+    .portal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: var(--shadow-lg);
+    }
+    .pad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .pad-btn {
+      width: 70px;
+      height: 70px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      font-size: 22px;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .pad-btn:hover {
+      background: var(--auto-yellow);
+      color: #000;
+      border-color: var(--auto-yellow);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header-bar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-icon-box">🛺</div>
+      <div class="brand-text">
+        <h1>AutoTrack <span>Live</span></h1>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="brand-badge">Driver Telemetry Console</span>
+        </div>
+      </div>
+    </a>
+
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">
+        <span>🗺️</span> Live Map
+      </a>
+      <a href="drivers.html" class="nav-link">
+        <span>📋</span> Registered Drivers
+      </a>
+      <a href="add-driver.html" class="nav-link">
+        <span>➕</span> Register Driver
+      </a>
+      <a href="driver-portal.html" class="nav-link active">
+        <span>📡</span> Driver GPS Mode
+      </a>
+      <a href="project-info.html" class="nav-link">
+        <span>🎓</span> Project Viva & Report
+      </a>
+    </nav>
+  </header>
+
+  <!-- Driver Portal -->
+  <main class="portal-container">
+    
+    <div style="margin-bottom:24px;">
+      <h2 style="font-size:1.8rem; margin-bottom:6px;">Driver GPS Telemetry Transmitter</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem;">
+        Simulate or transmit actual smartphone GPS coordinates from an auto-rickshaw driver directly to the Java Spring Boot backend and Google Maps canvas.
+      </p>
+    </div>
+
+    <div class="portal-card">
+      
+      <!-- Select Driver Identity -->
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="form-label">Select Registered Driver Profile</label>
+        <select id="driverSelect" class="form-select" onchange="onDriverSelected()">
+          <option value="">Loading drivers...</option>
+        </select>
+      </div>
+
+      <div id="driverProfileDetails" style="display:none; background:rgba(15,23,42,0.6); border-radius:var(--radius-md); padding:16px; margin-bottom:24px; border:1px solid var(--border-glass);">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:12px;">
+          <img id="dImg" src="" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid var(--auto-yellow);" />
+          <div>
+            <h3 id="dName" style="font-size:1.1rem; color:#fff;"></h3>
+            <span id="dPlate" class="auto-number-plate"></span>
+          </div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-muted);">
+          📍 <strong>Current Coordinates:</strong> <span id="dCoords" style="color:var(--auto-yellow); font-family:monospace;"></span><br/>
+          🛺 <strong>Stand:</strong> <span id="dStand"></span> | <strong>Status:</strong> <span id="dStatus" style="font-weight:700;"></span>
+        </div>
+      </div>
+
+      <!-- Real GPS Live Broadcast -->
+      <div style="background:rgba(30,41,59,0.5); border-radius:var(--radius-md); padding:20px; margin-bottom:24px; border:1px solid var(--border-glass);">
+        <h4 style="font-size:1rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <span>📱</span> Real Smartphone GPS Broadcast
+        </h4>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">
+          Enable browser geolocation tracking (`navigator.geolocation.watchPosition`) to continuously stream your physical coordinates to the central server.
+        </p>
+
+        <div style="display:flex; gap:10px;">
+          <button id="btnWatchGps" onclick="toggleGpsTracking()" class="btn-pill primary">
+            📡 Start Live GPS Broadcast
+          </button>
+          <button onclick="toggleAvailability()" class="btn-pill secondary">
+            🔄 Toggle Available / Busy
+          </button>
+        </div>
+        <div id="gpsStatusLog" style="margin-top:12px; font-size:0.8rem; color:var(--text-dim); font-family:monospace;">
+          Status: Ready to broadcast.
+        </div>
+      </div>
+
+      <!-- Manual Steering Pad for Viva/Presentation -->
+      <div style="text-align:center;">
+        <h4 style="font-size:1rem; margin-bottom:6px;">🎮 Manual Driving Control (Demo Viva Pad)</h4>
+        <p style="font-size:0.8rem; color:var(--text-muted);">
+          Click directional buttons to manually drive this auto rickshaw in real-time on Google Maps!
+        </p>
+
+        <div class="pad-grid">
+          <div></div>
+          <button class="pad-btn" onclick="moveDriver(0.0003, 0, 0)" title="Drive North">⬆️</button>
+          <div></div>
+          
+          <button class="pad-btn" onclick="moveDriver(0, -0.0003, 270)" title="Drive West">⬅️</button>
+          <div style="display:flex; align-items:center; justify-content:center; font-size:24px;">🛺</div>
+          <button class="pad-btn" onclick="moveDriver(0, 0.0003, 90)" title="Drive East">➡️</button>
+          
+          <div></div>
+          <button class="pad-btn" onclick="moveDriver(-0.0003, 0, 180)" title="Drive South">⬇️</button>
+          <div></div>
+        </div>
+
+        <a href="index.html" class="btn-pill secondary" style="display:inline-block; margin-top:10px;">
+          🗺️ View Live Moving Rickshaws on Google Map
+        </a>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    let drivers = [];
+    let selectedDriver = null;
+    let watchId = null;
+
+    async function loadDrivers() {
+      try {
+        const res = await fetch('/api/drivers');
+        drivers = await res.json();
+        const select = document.getElementById('driverSelect');
+        select.innerHTML = '<option value="">-- Choose a Driver Profile --</option>' + 
+          drivers.map(d => `<option value="${d.id}">${d.name} (${d.autoNumber}) - ${d.standName || 'Stand'}</option>`).join('');
+
+        if (drivers.length > 0) {
+          select.value = drivers[0].id;
+          onDriverSelected();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function onDriverSelected() {
+      const id = parseInt(document.getElementById('driverSelect').value);
+      selectedDriver = drivers.find(d => d.id === id);
+      const box = document.getElementById('driverProfileDetails');
+
+      if (!selectedDriver) {
+        box.style.display = 'none';
+        return;
+      }
+
+      box.style.display = 'block';
+      document.getElementById('dImg').src = selectedDriver.photoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+      document.getElementById('dName').textContent = selectedDriver.name;
+      document.getElementById('dPlate').textContent = selectedDriver.autoNumber;
+      document.getElementById('dCoords').textContent = `${selectedDriver.latitude.toFixed(5)}, ${selectedDriver.longitude.toFixed(5)}`;
+      document.getElementById('dStand').textContent = selectedDriver.standName;
+      document.getElementById('dStatus').textContent = selectedDriver.isAvailable ? 'Available' : 'Busy';
+      document.getElementById('dStatus').style.color = selectedDriver.isAvailable ? 'var(--success)' : 'var(--warning)';
+    }
+
+    async function moveDriver(dLat, dLng, heading) {
+      if (!selectedDriver) {
+        alert("Please select a driver first!");
+        return;
+      }
+
+      selectedDriver.latitude += dLat;
+      selectedDriver.longitude += dLng;
+      selectedDriver.heading = heading;
+
+      try {
+        const res = await fetch(`/api/drivers/${selectedDriver.id}/location`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            latitude: selectedDriver.latitude,
+            longitude: selectedDriver.longitude,
+            heading: selectedDriver.heading,
+            isAvailable: selectedDriver.isAvailable
+          })
+        });
+        if (res.ok) {
+          document.getElementById('dCoords').textContent = 
+            `${selectedDriver.latitude.toFixed(5)}, ${selectedDriver.longitude.toFixed(5)}`;
+          document.getElementById('gpsStatusLog').textContent = 
+            `Telemetry sent: Lat ${selectedDriver.latitude.toFixed(5)}, Lng ${selectedDriver.longitude.toFixed(5)}, Heading ${heading}°`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function toggleGpsTracking() {
+      if (!selectedDriver) {
+        alert("Please select a driver first!");
+        return;
+      }
+
+      const btn = document.getElementById('btnWatchGps');
+      const log = document.getElementById('gpsStatusLog');
+
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        btn.textContent = '📡 Start Live GPS Broadcast';
+        btn.classList.add('primary');
+        btn.classList.remove('secondary');
+        log.textContent = 'Status: Live GPS broadcast stopped.';
+      } else {
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by your browser.');
+          return;
+        }
+        btn.textContent = '⏹️ Stop GPS Broadcast';
+        btn.classList.remove('primary');
+        btn.classList.add('secondary');
+        log.textContent = 'Status: Acquiring satellite lock & streaming coordinates...';
+
+        watchId = navigator.geolocation.watchPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const heading = pos.coords.heading || 0;
+
+            selectedDriver.latitude = lat;
+            selectedDriver.longitude = lng;
+            selectedDriver.heading = heading;
+
+            await fetch(`/api/drivers/${selectedDriver.id}/location`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                latitude: lat,
+                longitude: lng,
+                heading: heading,
+                isAvailable: selectedDriver.isAvailable
+              })
+            });
+
+            document.getElementById('dCoords').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            log.textContent = `Streaming Live GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)} (Accuracy: ${Math.round(pos.coords.accuracy)}m)`;
+          },
+          (err) => {
+            log.textContent = 'GPS Error: ' + err.message;
+          },
+          { enableHighAccuracy: true, maximumAge: 1000 }
+        );
+      }
+    }
+
+    async function toggleAvailability() {
+      if (!selectedDriver) return;
+      selectedDriver.isAvailable = !selectedDriver.isAvailable;
+      await fetch(`/api/drivers/${selectedDriver.id}/location`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: selectedDriver.latitude,
+          longitude: selectedDriver.longitude,
+          heading: selectedDriver.heading,
+          isAvailable: selectedDriver.isAvailable
+        })
+      });
+      onDriverSelected();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDrivers);
+  </script>
+
+</body>
+</html>

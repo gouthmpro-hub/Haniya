@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registered Drivers Directory | AutoTrack Live</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <style>
+    .directory-container {
+      max-width: 1200px;
+      margin: 100px auto 40px;
+      padding: 0 24px;
+    }
+    .page-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .drivers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .driver-directory-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+    }
+    .driver-directory-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header-bar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-icon-box">🛺</div>
+      <div class="brand-text">
+        <h1>AutoTrack <span>Live</span></h1>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="brand-badge">College Mini Project</span>
+        </div>
+      </div>
+    </a>
+
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">
+        <span>🗺️</span> Live Map
+      </a>
+      <a href="drivers.html" class="nav-link active">
+        <span>📋</span> Registered Drivers
+      </a>
+      <a href="add-driver.html" class="nav-link">
+        <span>➕</span> Register Driver
+      </a>
+      <a href="driver-portal.html" class="nav-link">
+        <span>📡</span> Driver GPS Mode
+      </a>
+      <a href="project-info.html" class="nav-link">
+        <span>🎓</span> Project Viva & Report
+      </a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="add-driver.html" class="btn-pill primary">
+        <span>➕</span> Register New Driver
+      </a>
+    </div>
+  </header>
+
+  <!-- Drivers Directory Container -->
+  <main class="directory-container">
+    
+    <div class="page-header-row">
+      <div>
+        <h2 style="font-size:1.8rem; margin-bottom:6px;">Registered Auto Rickshaw Drivers</h2>
+        <p style="color:var(--text-muted); font-size:0.9rem;">
+          Manage the active fleet of auto rickshaws, update vehicle records, or monitor individual driver status.
+        </p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="fetchDrivers()" class="btn-pill secondary">
+          🔄 Refresh Fleet
+        </button>
+        <button onclick="resetDefaults()" class="btn-pill secondary">
+          🔁 Reset to 5 Seed Drivers
+        </button>
+      </div>
+    </div>
+
+    <!-- Drivers Grid -->
+    <div class="drivers-grid" id="driversDirectoryGrid">
+      <div style="grid-column: 1 / -1; text-align:center; padding:50px; color:var(--text-dim);">
+        Loading fleet data from Java Spring Boot backend...
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    async function fetchDrivers() {
+      try {
+        const res = await fetch('/api/drivers');
+        const drivers = await res.json();
+        const grid = document.getElementById('driversDirectoryGrid');
+
+        if (drivers.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding:60px;">
+              <h3>No Drivers Registered</h3>
+              <p style="color:var(--text-muted); margin:12px 0;">Register your first auto rickshaw to begin tracking.</p>
+              <a href="add-driver.html" class="btn-pill primary" style="display:inline-block;">+ Add Driver</a>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = drivers.map(d => {
+          const isAvail = d.isAvailable !== false;
+          const phoneClean = (d.phone || '').replace(/[^0-9]/g, '');
+
+          return `
+            <div class="driver-directory-card">
+              <div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+                  <div style="display:flex; align-items:center; gap:14px;">
+                    <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}" 
+                         style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:2.5px solid var(--auto-yellow);" />
+                    <div>
+                      <h3 style="font-size:1.15rem; color:#fff; margin-bottom:2px;">${d.name}</h3>
+                      <span class="auto-number-plate">${d.autoNumber}</span>
+                    </div>
+                  </div>
+                  <span class="badge" style="background:${isAvail ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${isAvail ? '#10B981' : '#EF4444'}; padding:3px 10px; border-radius:9999px; font-size:0.75rem; font-weight:700; border:1px solid ${isAvail ? '#10B981' : '#EF4444'};">
+                    ${isAvail ? '● Available' : '● Busy'}
+                  </span>
+                </div>
+
+                <div style="background:rgba(15,23,42,0.6); border-radius:var(--radius-md); padding:12px; margin-bottom:16px; font-size:0.85rem; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Vehicle Model</span><br/><strong>${d.autoModel || 'Bajaj RE'}</strong></div>
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Fuel Type</span><br/><strong>${d.fuelType || 'CNG'}</strong></div>
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Base Stand</span><br/><strong>${d.standName || 'Town Junction'}</strong></div>
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Rating</span><br/><strong style="color:var(--warning);">★ ${d.rating ? d.rating.toFixed(1) : '4.8'} / 5.0</strong></div>
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Base Fare</span><br/><strong>₹${d.baseFare || 30}</strong></div>
+                  <div><span style="color:var(--text-dim); font-size:0.75rem;">Rate / Km</span><br/><strong style="color:var(--auto-yellow);">₹${d.farePerKm || 15}/km</strong></div>
+                </div>
+
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">
+                  📍 Live GPS: <code>${d.latitude.toFixed(4)}, ${d.longitude.toFixed(4)}</code> (Heading: ${Math.round(d.heading || 0)}°)<br/>
+                  📞 Phone: <a href="tel:${d.phone}" style="color:var(--primary); text-decoration:none; font-weight:600;">${d.phone}</a>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:8px;">
+                <a href="index.html" class="btn-action btn-locate" style="flex:1; text-align:center;">
+                  🗺️ Track on Map
+                </a>
+                <a href="https://wa.me/${phoneClean}" target="_blank" class="btn-action btn-whatsapp" style="padding:8px 12px;">
+                  💬 WhatsApp
+                </a>
+                <button onclick="deleteDriver(${d.id})" class="btn-action" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#EF4444;" title="Delete Driver">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deleteDriver(id) {
+      if (!confirm('Are you sure you want to remove this driver?')) return;
+      try {
+        const res = await fetch(`/api/drivers/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          fetchDrivers();
+        }
+      } catch (err) {
+        alert('Failed to delete driver');
+      }
+    }
+
+    async function resetDefaults() {
+      if (!confirm('Reset all fleet drivers back to default 5 registered auto-rickshaws?')) return;
+      try {
+        const res = await fetch('/api/drivers/reset-defaults', { method: 'POST' });
+        if (res.ok) fetchDrivers();
+      } catch (err) {
+        alert('Reset failed');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchDrivers);
+  </script>
+
+</body>
+</html>

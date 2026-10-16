@@ -1,0 +1,349 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoTrack Live | Real-Time Auto Rickshaw Tracking & Driver Connect</title>
+  <meta name="description" content="College Mini Project - Live GPS Auto Rickshaw Tracking and Driver Connect System using Java Spring Boot and Google Maps. Connect directly with nearby drivers without ordering hassles.">
+  
+  <!-- Leaflet & Custom CSS -->
+  <link rel="stylesheet" href="css/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header-bar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-icon-box">🛺</div>
+      <div class="brand-text">
+        <h1>AutoTrack <span>Live</span></h1>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="brand-badge">College Mini Project</span>
+          <span class="brand-badge" style="border-color:#3B82F6; color:#60A5FA; background:rgba(59,130,246,0.15);">Java + Google Maps</span>
+        </div>
+      </div>
+    </a>
+
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link active">
+        <span>🗺️</span> Live Map
+      </a>
+      <a href="drivers.html" class="nav-link">
+        <span>📋</span> Registered Drivers
+      </a>
+      <a href="add-driver.html" class="nav-link">
+        <span>➕</span> Register Driver
+      </a>
+      <a href="driver-portal.html" class="nav-link">
+        <span>📱</span> Driver GPS Mode
+      </a>
+      <a href="project-info.html" class="nav-link">
+        <span>🎓</span> Project Report & Viva
+      </a>
+    </nav>
+
+    <div class="header-actions">
+      <div class="live-indicator" id="simStatusBadge">
+        <span class="pulse-dot"></span>
+        <span>Simulation Live</span>
+      </div>
+
+      <button id="btnOpenFriendsModal" class="btn-pill secondary" title="Customize your 4 Friends profiles">
+        <span>👥</span> My 4 Friends
+      </button>
+
+      <button id="btnOpenAddModal" class="btn-pill primary" title="Add a new driver to the system">
+        <span>➕</span> Add Driver
+      </button>
+
+      <button id="btnOpenKeyModal" class="btn-icon-sm" title="Configure Google Maps API Key">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout: Sidebar + Google Map Hero -->
+  <main class="app-container">
+    
+    <!-- Left Sidebar: Nearby Autos & Contact Details -->
+    <aside class="sidebar-panel">
+      
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        
+        <div class="sidebar-title-row">
+          <h2 class="sidebar-title">
+            <span>Nearby Friend Autos</span>
+            <span class="count-badge" id="driverCountBadge">4</span>
+          </h2>
+          <button id="btnLocateMe" class="btn-icon-sm" title="Fetch My Current GPS Location">
+            📍
+          </button>
+        </div>
+
+        <!-- Passenger Pickup Location Card -->
+        <div class="passenger-location-card">
+          <div class="passenger-loc-info">
+            <div class="loc-pin-icon">📍</div>
+            <div class="passenger-loc-text">
+              <div class="title">Passenger Location</div>
+              <div class="coords" id="userCoordsDisplay">Fetching your GPS...</div>
+            </div>
+          </div>
+          <span style="font-size:0.7rem; color:var(--text-dim); text-align:right;">
+            Click map to adjust
+          </span>
+        </div>
+
+        <!-- PROMINENT SEARCH HERO BUTTON -->
+        <button id="btnSearchAutos" class="btn-search-hero" title="Search and locate all 4 friend drivers around you">
+          <span>🔍</span>
+          <span>Search 4 Friend Autos Near Me</span>
+        </button>
+
+        <p style="font-size:0.75rem; color:var(--text-muted); margin:-6px 0 10px 0; text-align:center;">
+          Clusters & tracks your 4 friend drivers in real-time around your GPS location
+        </p>
+
+        <!-- Search & Radius Filter -->
+        <div class="filter-bar">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="driverSearchInput" placeholder="Filter by friend name, auto no..." />
+          </div>
+          <select id="radiusFilterSelect" class="radius-select" title="Filter by maximum distance">
+            <option value="">All Distance</option>
+            <option value="1">Within 1 km</option>
+            <option value="2">Within 2 km</option>
+            <option value="5">Within 5 km</option>
+            <option value="10">Within 10 km</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Scrollable List of Registered Drivers -->
+      <div class="drivers-list-container" id="driversList">
+        <!-- Rendered dynamically by app.js -->
+        <div style="text-align:center; padding:30px; color:var(--text-dim);">
+          Loading registered drivers...
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Google Map Hero Container -->
+    <section class="map-container-wrapper">
+      
+      <!-- Fullscreen Google Map Canvas -->
+      <div id="map"></div>
+
+      <!-- Floating Map Controls (Top-Right) -->
+      <div class="map-floating-overlay">
+        
+        <!-- Live Simulation Controller Group -->
+        <div class="simulation-control-group">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">
+              📡 Real-Time Telemetry
+            </span>
+            <span style="font-size:0.75rem; color:var(--success); font-weight:700;">Active</span>
+          </div>
+
+          <div class="sim-btn-row">
+            <button id="btnToggleSim" class="btn-pill secondary">
+              ⏸️ Pause Sim
+            </button>
+            <button onclick="if(window.fitAllDriversOnMap) window.fitAllDriversOnMap()" class="btn-pill secondary" title="Frame all autos in view">
+              🎯 Fit Autos
+            </button>
+            <button id="btnResetDefaults" class="btn-pill secondary" title="Reset to original 4 drivers">
+              🔄 Reset Demo
+            </button>
+          </div>
+
+          <div class="speed-selector">
+            <span>Speed:</span>
+            <span class="speed-tag active" data-speed="1.0">1x</span>
+            <span class="speed-tag" data-speed="2.0">2x</span>
+            <span class="speed-tag" data-speed="3.5">3.5x</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Floating Bottom Banner: Quick Instruction -->
+      <div class="map-bottom-banner">
+        <span>💡 <strong>Tip for Viva:</strong> Click any auto to view driver details, phone call, and WhatsApp connect!</span>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Quick Add / Register New Driver -->
+  <div class="modal-backdrop" id="addDriverModal">
+    <div class="modal-box">
+      
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>🛺</span> Register New Auto Driver
+        </h3>
+        <button class="modal-close-btn" id="btnCloseAddModal">&times;</button>
+      </div>
+
+      <form id="quickAddDriverForm">
+        <div class="modal-body">
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+            Add a new driver to test live tracking. The driver will immediately appear on Google Maps.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Driver Full Name *</label>
+              <input type="text" id="addDriverName" class="form-input" placeholder="e.g. Anand Krishna" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" id="addDriverPhone" class="form-input" placeholder="+91 98470 12345" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Auto Registration No *</label>
+              <input type="text" id="addDriverAutoNumber" class="form-input" placeholder="KL-07-CD-5544" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fuel Type</label>
+              <select id="addDriverFuel" class="form-select">
+                <option value="CNG">CNG</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Electric">Electric (EV)</option>
+                <option value="Diesel">Diesel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Auto Model</label>
+              <input type="text" id="addDriverModel" class="form-input" placeholder="Bajaj RE Compact" value="Bajaj RE Compact" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Base Auto Stand *</label>
+              <input type="text" id="addDriverStand" class="form-input" placeholder="e.g. North Gate Stand" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Fare Rate (₹/km)</label>
+              <input type="number" id="addDriverFare" class="form-input" value="15" min="10" max="50" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Base Fare (₹)</label>
+              <input type="number" class="form-input" value="30" readonly />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-pill secondary" onclick="document.getElementById('addDriverModal').classList.remove('show')">
+            Cancel
+          </button>
+          <button type="submit" class="btn-pill primary">
+            ✅ Register Driver & Show on Map
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Modal: Google Maps API Key Configurator -->
+  <div class="modal-backdrop" id="apiKeyModal">
+    <div class="modal-box">
+      
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>⚙️</span> Map Tile Settings
+        </h3>
+        <button class="modal-close-btn" id="btnCloseKeyModal">&times;</button>
+      </div>
+
+      <form id="apiKeyForm">
+        <div class="modal-body">
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">
+            The project displays high-resolution <strong>Google Maps Road, Satellite, and Terrain layers</strong>.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label">Optional Google Maps API Key</label>
+            <input type="text" id="googleMapsApiKeyInput" class="form-input" placeholder="AIzaSy..." />
+          </div>
+
+          <div style="background:rgba(59, 130, 246, 0.1); border:1px solid rgba(59,130,246,0.3); border-radius:var(--radius-sm); padding:10px 14px; font-size:0.8rem; color:#93C5FD;">
+            ℹ️ Google Maps tiles load seamlessly with full interactive zoom, pan, and real-time auto telemetry!
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-pill secondary" onclick="document.getElementById('apiKeyModal').classList.remove('show')">
+            Close
+          </button>
+          <button type="submit" class="btn-pill primary">
+            Save & Reload Map
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Modal: Customize 4 Friends Driver Profiles -->
+  <div class="modal-backdrop" id="customizeFriendsModal">
+    <div class="modal-box" style="max-width: 650px;">
+      
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <span>👥</span> Customize Your 4 Friends as Drivers
+        </h3>
+        <button class="modal-close-btn" id="btnCloseFriendsModal">&times;</button>
+      </div>
+
+      <form id="customizeFriendsForm">
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+            Set your 4 real friends' names, phone numbers, and auto registration numbers. Passengers can call or WhatsApp them directly!
+          </p>
+
+          <div id="friendsInputsContainer">
+            <!-- Dynamically populated -->
+            <div style="text-align:center; padding:20px; color:var(--text-dim);">Loading friends...</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-pill secondary" onclick="document.getElementById('customizeFriendsModal').classList.remove('show')">
+            Cancel
+          </button>
+          <button type="submit" class="btn-pill primary">
+            💾 Save 4 Friends Profiles
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- JavaScript Modules: Leaflet first, then Google Map Engine, then App Controller -->
+  <script src="js/leaflet.js"></script>
+  <script src="js/google-map.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

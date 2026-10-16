@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Mini Project Report & Viva Hub | AutoTrack Live</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛺</text></svg>">
+  <style>
+    .doc-container {
+      max-width: 1000px;
+      margin: 100px auto 60px;
+      padding: 0 24px;
+    }
+    .doc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .doc-card h3 {
+      color: var(--auto-yellow);
+      margin-bottom: 14px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .code-box {
+      background: #0D1117;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      color: #79C0FF;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .viva-card {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid var(--auto-yellow);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+    }
+    .viva-q {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+    .viva-a {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="header-bar">
+    <a href="index.html" class="brand-wrapper">
+      <div class="brand-icon-box">🛺</div>
+      <div class="brand-text">
+        <h1>AutoTrack <span>Live</span></h1>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="brand-badge">Mini Project Documentation</span>
+        </div>
+      </div>
+    </a>
+
+    <nav class="header-nav">
+      <a href="index.html" class="nav-link">
+        <span>🗺️</span> Live Map
+      </a>
+      <a href="drivers.html" class="nav-link">
+        <span>📋</span> Registered Drivers
+      </a>
+      <a href="add-driver.html" class="nav-link">
+        <span>➕</span> Register Driver
+      </a>
+      <a href="driver-portal.html" class="nav-link">
+        <span>📡</span> Driver GPS Mode
+      </a>
+      <a href="project-info.html" class="nav-link active">
+        <span>🎓</span> Project Viva & Report
+      </a>
+    </nav>
+  </header>
+
+  <!-- Documentation Container -->
+  <main class="doc-container">
+    
+    <div style="text-align:center; margin-bottom:36px;">
+      <span class="brand-badge" style="font-size:0.8rem; padding:4px 14px;">B.Tech / MCA Mini Project</span>
+      <h1 style="font-size:2.2rem; margin:12px 0 8px;">Real-Time GPS Auto Rickshaw Tracking & Direct Connect</h1>
+      <p style="color:var(--text-muted); font-size:1rem; max-width:700px; margin:0 auto;">
+        A location-based service (LBS) built with <strong>Java 17, Spring Boot, Google Maps JavaScript API, and H2 JPA</strong> enabling direct passenger-to-driver contact without middleman commission or ride ordering friction.
+      </p>
+    </div>
+
+    <!-- 1. Abstract & Problem Statement -->
+    <div class="doc-card">
+      <h3><span>🎯</span> 1. Project Abstract & Objectives</h3>
+      <p style="color:var(--text-muted); line-height:1.7; margin-bottom:12px;">
+        Traditional ride-hailing applications (such as Uber and Ola) require complex in-app bidding, dynamic pricing surcharges, high commission deductions (20-30%), and mandatory ride-ordering transactions. Local auto-rickshaw commuters and students often just need to know: <em>"Where is the nearest auto right now, and what is the driver's phone number so I can call them directly?"</em>
+      </p>
+      <p style="color:var(--text-muted); line-height:1.7;">
+        <strong>Project Goals:</strong>
+        <ul style="margin-left:24px; color:var(--text-muted); line-height:1.8;">
+          <li>Eliminate middleman order transactions: Connect passengers directly with nearby registered auto rickshaws via live telephone and WhatsApp.</li>
+          <li>Display live GPS telemetry of all registered auto-rickshaws simultaneously on an interactive <strong>Google Map</strong>.</li>
+          <li>Implement mathematical <strong>Haversine Formula</strong> in Java to dynamically compute shortest surface distance and estimated time of arrival (ETA).</li>
+          <li>Support dynamic driver onboarding: Add new drivers to the fleet with immediate rendering on Google Maps.</li>
+        </ul>
+      </p>
+    </div>
+
+    <!-- 2. System Architecture -->
+    <div class="doc-card">
+      <h3><span>🏗️</span> 2. System Architecture & Tech Stack</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin:16px 0;">
+        <div style="background:rgba(15,23,42,0.6); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+          <strong style="color:var(--auto-yellow);">Backend</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Java 17, Spring Boot 3.2.5, Spring MVC REST, Spring Data JPA</p>
+        </div>
+        <div style="background:rgba(15,23,42,0.6); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+          <strong style="color:var(--primary);">Mapping Engine</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Official Google Maps JavaScript API with Custom Animated SVG Rickshaws</p>
+        </div>
+        <div style="background:rgba(15,23,42,0.6); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+          <strong style="color:var(--success);">Database</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">H2 Database (In-Memory & Persistent file storage), SQL schema</p>
+        </div>
+        <div style="background:rgba(15,23,42,0.6); padding:16px; border-radius:var(--radius-md); border:1px solid var(--border-glass);">
+          <strong style="color:var(--warning);">Frontend</strong>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">HTML5, CSS3 Glassmorphism, Vanilla JavaScript ES6+, Geolocation API</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Mathematical Formula -->
+    <div class="doc-card">
+      <h3><span>📐</span> 3. Distance Calculation: Haversine Algorithm</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+        The Haversine formula determines the great-circle distance between two points on a sphere given their longitudes and latitudes. Implemented in <code>DriverService.java</code>:
+      </p>
+      <div class="code-box">
+public static double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+    final int EARTH_RADIUS_KM = 6371;
+
+    double dLat = Math.toRadians(lat2 - lat1);
+    double dLon = Math.toRadians(lon2 - lon1);
+
+    double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return EARTH_RADIUS_KM * c;
+}
+      </div>
+    </div>
+
+    <!-- 4. REST API Specifications -->
+    <div class="doc-card">
+      <h3><span>🔌</span> 4. Spring Boot RESTful Endpoints</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:0.85rem; text-align:left;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border-glass); color:var(--text-dim);">
+            <th style="padding:10px;">Method</th>
+            <th style="padding:10px;">Endpoint</th>
+            <th style="padding:10px;">Functionality</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-muted);">
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:10px;"><span style="color:#10B981; font-weight:700;">GET</span></td>
+            <td style="padding:10px;"><code>/api/drivers</code></td>
+            <td style="padding:10px;">Retrieves full fleet of registered drivers</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:10px;"><span style="color:#10B981; font-weight:700;">GET</span></td>
+            <td style="padding:10px;"><code>/api/drivers/nearby</code></td>
+            <td style="padding:10px;">Computes spatial proximity & ETA relative to passenger GPS</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:10px;"><span style="color:#3B82F6; font-weight:700;">POST</span></td>
+            <td style="padding:10px;"><code>/api/drivers</code></td>
+            <td style="padding:10px;">Registers a new auto-rickshaw into the database</td>
+          </tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td style="padding:10px;"><span style="color:#3B82F6; font-weight:700;">POST</span></td>
+            <td style="padding:10px;"><code>/api/drivers/{id}/location</code></td>
+            <td style="padding:10px;">Updates live telemetry coordinates from driver device</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;"><span style="color:#EF4444; font-weight:700;">DELETE</span></td>
+            <td style="padding:10px;"><code>/api/drivers/{id}</code></td>
+            <td style="padding:10px;">Removes an auto-rickshaw record</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. College Viva Questions & Answers -->
+    <div class="doc-card">
+      <h3><span>🎓</span> 5. College Viva Questions & Model Answers</h3>
+
+      <div class="viva-card">
+        <div class="viva-q">Q1: How does this project differ from Uber or Ola?</div>
+        <div class="viva-a">
+          <strong>Answer:</strong> Uber and Ola act as centralized booking brokers taking 20-30% commissions, requiring in-app digital payments and wait queues. Our system is a software-only <em>Direct Connect & Live Tracking</em> utility. Passengers see real-time moving rickshaws on Google Maps with direct phone and WhatsApp contact info, enabling direct street-fare or standardized meter negotiation with zero commission.
+        </div>
+      </div>
+
+      <div class="viva-card">
+        <div class="viva-q">Q2: How is real-time location simulated and tracked?</div>
+        <div class="viva-a">
+          <strong>Answer:</strong> The backend contains a scheduled service (<code>SimulationService.java</code>) executing periodic background threads using Spring's <code>@Scheduled</code> annotation. It models vehicle heading, speed variations, and road turn probabilities. Additionally, real drivers can transmit live physical coordinates via <code>navigator.geolocation.watchPosition</code> in <code>driver-portal.html</code>.
+        </div>
+      </div>
+
+      <div class="viva-card">
+        <div class="viva-q">Q3: Why did you use Google Maps JavaScript API?</div>
+        <div class="viva-a">
+          <strong>Answer:</strong> Google Maps provides industry-leading road network detail, landmark recognition, high-resolution satellite/street imagery, and powerful marker rendering capabilities. We customized it using SVG symbols with dynamic rotation matching vehicle headings.
+        </div>
+      </div>
+
+      <div class="viva-card">
+        <div class="viva-q">Q4: How does data persistence work?</div>
+        <div class="viva-a">
+          <strong>Answer:</strong> We use Spring Data JPA backed by H2 file-based storage (<code>./data/autotrackdb</code>). This ensures drivers added during presentations remain persisted even after application restarts, while offering a built-in web console at <code>/h2-console</code> for database inspections.
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+</body>
+</html>
